@@ -1,0 +1,3 @@
+mmlsfs::HEADER:version:reserved:reserved:deviceName:fieldName:data:remarks:
+mmlsfs::0:1:::gpfs1:blockSize:8388608::
+mmlsfs::0:1:::gpfs2:blockSize:524288::
