@@ -1,0 +1,2 @@
+mmgetstate::HEADER:version:reserved:reserved:nodeName:nodeNumber:state:quorum:nodesUp:totalNodes:remarks:cnfsState:daemonShortName:
+mmgetstate::0:1:::filer1:1:active:2:3:88:quorum node:(undefined):filer1:
