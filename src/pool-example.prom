@@ -1,0 +1,10 @@
+# HELP gpfs_fs_pool_total_kbytes GPFS pool size in kilobytes.
+# TYPE gpfs_fs_pool_total_kbytes gauge
+gpfs_fs_pool_total_kbytes{fs="gpfs1",pool="system",type="meta"} 25004867584
+gpfs_fs_pool_total_kbytes{fs="gpfs1",pool="nvme",type="data"} 162531639296
+gpfs_fs_pool_total_kbytes{fs="gpfs1",pool="nlsas",type="data"} 1997953957888
+# HELP gpfs_fs_pool_free_kbytes GPFS pool free kilobytes.
+# TYPE gpfs_fs_pool_free_kbytes gauge
+gpfs_fs_pool_free_kbytes{fs="gpfs1",pool="system",type="meta"} 9798959104
+gpfs_fs_pool_free_kbytes{fs="gpfs1",pool="nvme",type="data"} 114505474048
+gpfs_fs_pool_free_kbytes{fs="gpfs1",pool="nlsas",type="data"} 1981410271232

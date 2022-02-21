@@ -1,0 +1,6 @@
+Storage pools in file system at '/gpfs1':
+Name                    Id   BlkSize Data Meta Total Data in (KB)   Free Data in (KB)   Total Meta in (KB)    Free Meta in (KB)
+system                   0      8 MB   no  yes              0              0 (  0%)    25004867584     9798959104 ( 39%)
+nvme                 65537      8 MB  yes   no   162531639296   114505474048 ( 70%)              0              0 (  0%)
+nlsas                65538      8 MB  yes   no  1997953957888  1981410271232 ( 99%)              0              0 (  0%)
+dangerzone           65538      8 MB  yes  yes             42             42 (100%)             42             42 (100%)
