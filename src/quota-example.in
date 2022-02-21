@@ -1,0 +1,6 @@
+*** Report for USR GRP FILESET quotas on gpfs1
+mmrepquota::HEADER:version:reserved:reserved:filesystemName:quotaType:id:name:blockUsage:blockQuota:blockLimit:blockInDoubt:blockGrace:filesUsage:filesQuota:filesLimit:filesInDoubt:filesGrace:remarks:quota:defQuota:fid:filesetname:
+mmrepquota::0:1:::gpfs1:FILESET:1:name1:950235440:4294967296:5368709120:406372448:none:553624:5000000:20000000:0:none:e:on:off:::
+*** Report for USR GRP FILESET quotas on gpfs1
+mmrepquota::HEADER:version:reserved:reserved:filesystemName:quotaType:id:name:blockUsage:blockQuota:blockLimit:blockInDoubt:blockGrace:filesUsage:filesQuota:filesLimit:filesInDoubt:filesGrace:remarks:quota:defQuota:fid:filesetname:
+mmrepquota::0:1:::gpfs1:USR:62347:62347:455894288:0:0:0:none:25738:0:0:0:none:i:on:off:117:fileset1:
