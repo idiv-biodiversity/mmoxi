@@ -10,3 +10,4 @@ pub mod nsd;
 pub mod pool;
 pub mod quota;
 pub mod state;
+pub mod sysfs;
