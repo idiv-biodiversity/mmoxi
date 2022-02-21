@@ -5,6 +5,7 @@
 
 pub mod disk;
 pub mod fs;
+pub mod nsd;
 pub mod pool;
 pub mod quota;
 pub mod state;

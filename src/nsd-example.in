@@ -1,0 +1,4 @@
+mmlsnsd:nsd:HEADER:version:reserved:reserved:fileSystem:diskName:volumeId:serverList:deviceType:localDiskName:remarks:
+mmlsnsd:nsd:0:1::::disk1:0A0A14155C7041BA:filer1:dmm:/dev/dm-1:server node:
+mmlsnsd:nsd:0:1::::disk2:0A0A14155C7041BA:filer2:dmm:/dev/dm-2:server node:
+mmlsnsd:nsd:0:1::::disk3:0A0A14155C7041BA:filer3:dmm:/dev/dm-3:server node:
