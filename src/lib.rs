@@ -8,6 +8,7 @@ pub mod fs;
 pub mod nmon;
 pub mod nsd;
 pub mod pool;
+pub mod prom;
 pub mod quota;
 pub mod state;
 pub mod sysfs;
