@@ -15,5 +15,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 
+[dependencies.clap]
+version = "3"
+features = ["cargo", "wrap_help"]
+
 [profile.release]
 lto = true
