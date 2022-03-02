@@ -153,6 +153,7 @@ fn arg_output() -> Arg<'static> {
     Arg::new("output")
         .short('o')
         .long("output")
+        .takes_value(true)
         .help("output file")
         .long_help("Output file.")
 }
