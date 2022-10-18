@@ -600,7 +600,7 @@ mod tests {
                         limit: 20_000_000,
                         in_doubt: 0,
                     },
-                    fileset_name: "".into(),
+                    fileset_name: String::new(),
                 },
                 Entry {
                     fs_name: "gpfs1".into(),
@@ -648,7 +648,7 @@ mod tests {
                         limit: 20_000_000,
                         in_doubt: 0,
                     },
-                    fileset_name: "".into(),
+                    fileset_name: String::new(),
                 },
                 Entry {
                     fs_name: "gpfs1".into(),
