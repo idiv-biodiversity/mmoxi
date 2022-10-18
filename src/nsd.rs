@@ -232,7 +232,6 @@ impl Nsds {
     }
 
     /// Returns an [`Iterator`] over the NSDs.
-    #[must_use]
     pub fn iter(&self) -> std::slice::Iter<Nsd> {
         self.0.iter()
     }
