@@ -25,7 +25,7 @@ pub fn local_node_name() -> Result<String> {
         .into_iter()
         .next()
         .map(State::into_name)
-        .ok_or(anyhow!("no local state"))
+        .ok_or_else(|| anyhow!("no local state"))
 }
 
 /// Parsed states.
@@ -96,11 +96,13 @@ impl State {
 
 impl State {
     fn from_tokens(tokens: &[&str], index: &Index) -> Result<Self> {
-        let name_index =
-            index.node_name.ok_or(anyhow!("no node name index"))?;
+        let name_index = index
+            .node_name
+            .ok_or_else(|| anyhow!("no node name index"))?;
         let name = tokens[name_index].into();
 
-        let state_index = index.state.ok_or(anyhow!("no state index"))?;
+        let state_index =
+            index.state.ok_or_else(|| anyhow!("no state index"))?;
         let state = tokens[state_index].into();
 
         Ok(Self { name, state })

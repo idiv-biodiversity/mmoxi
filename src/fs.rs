@@ -81,8 +81,9 @@ impl Filesystem {
 
 impl Filesystem {
     fn from_tokens(tokens: &[&str], index: &Index) -> Result<Self> {
-        let name_index =
-            index.name.ok_or(anyhow!("no filesystem name index"))?;
+        let name_index = index
+            .name
+            .ok_or_else(|| anyhow!("no filesystem name index"))?;
         let name = tokens[name_index].into();
 
         Ok(Self { name })

@@ -228,37 +228,42 @@ impl fmt::Display for Type {
 
 impl Entry {
     fn from_tokens(tokens: &[&str], index: &Index) -> Result<Self> {
-        let fs_name_index =
-            index.fs_name.ok_or(anyhow!("no filesystem name index"))?;
+        let fs_name_index = index
+            .fs_name
+            .ok_or_else(|| anyhow!("no filesystem name index"))?;
         let fs_name = tokens[fs_name_index].into();
 
-        let quota_type_index =
-            index.quota_type.ok_or(anyhow!("no quota type index"))?;
+        let quota_type_index = index
+            .quota_type
+            .ok_or_else(|| anyhow!("no quota type index"))?;
         let quota_type = tokens[quota_type_index].parse::<Type>()?;
 
-        let id_index = index.id.ok_or(anyhow!("no id index"))?;
+        let id_index = index.id.ok_or_else(|| anyhow!("no id index"))?;
         let id = tokens[id_index];
         let id = id.parse().with_context(|| format!("invalid id: {id}"))?;
 
-        let name_index = index.name.ok_or(anyhow!("no name index"))?;
+        let name_index = index.name.ok_or_else(|| anyhow!("no name index"))?;
         let name = tokens[name_index].into();
 
-        let block_usage_index =
-            index.block_usage.ok_or(anyhow!("no block usage index"))?;
+        let block_usage_index = index
+            .block_usage
+            .ok_or_else(|| anyhow!("no block usage index"))?;
         let block_usage = tokens[block_usage_index];
         let block_usage = block_usage
             .parse()
             .with_context(|| format!("invalid block usage: {block_usage}"))?;
 
-        let block_quota_index =
-            index.block_quota.ok_or(anyhow!("no block quota index"))?;
+        let block_quota_index = index
+            .block_quota
+            .ok_or_else(|| anyhow!("no block quota index"))?;
         let block_quota = tokens[block_quota_index];
         let block_quota = block_quota
             .parse()
             .with_context(|| format!("invalid block quota: {block_quota}"))?;
 
-        let block_limit_index =
-            index.block_limit.ok_or(anyhow!("no block limit index"))?;
+        let block_limit_index = index
+            .block_limit
+            .ok_or_else(|| anyhow!("no block limit index"))?;
         let block_limit = tokens[block_limit_index];
         let block_limit = block_limit
             .parse()
@@ -266,28 +271,31 @@ impl Entry {
 
         let block_in_doubt_index = index
             .block_in_doubt
-            .ok_or(anyhow!("no block in doubt index"))?;
+            .ok_or_else(|| anyhow!("no block in doubt index"))?;
         let block_in_doubt = tokens[block_in_doubt_index];
         let block_in_doubt = block_in_doubt.parse().with_context(|| {
             format!("invalid block in doubt: {block_in_doubt}")
         })?;
 
-        let files_usage_index =
-            index.files_usage.ok_or(anyhow!("no files usage index"))?;
+        let files_usage_index = index
+            .files_usage
+            .ok_or_else(|| anyhow!("no files usage index"))?;
         let files_usage = tokens[files_usage_index];
         let files_usage = files_usage
             .parse()
             .with_context(|| format!("invalid files usage: {files_usage}"))?;
 
-        let files_quota_index =
-            index.files_quota.ok_or(anyhow!("no files quota index"))?;
+        let files_quota_index = index
+            .files_quota
+            .ok_or_else(|| anyhow!("no files quota index"))?;
         let files_quota = tokens[files_quota_index];
         let files_quota = files_quota
             .parse()
             .with_context(|| format!("invalid files quota: {files_quota}"))?;
 
-        let files_limit_index =
-            index.files_limit.ok_or(anyhow!("no files limit index"))?;
+        let files_limit_index = index
+            .files_limit
+            .ok_or_else(|| anyhow!("no files limit index"))?;
         let files_limit = tokens[files_limit_index];
         let files_limit = files_limit
             .parse()
@@ -295,14 +303,15 @@ impl Entry {
 
         let files_in_doubt_index = index
             .files_in_doubt
-            .ok_or(anyhow!("no files in doubt index"))?;
+            .ok_or_else(|| anyhow!("no files in doubt index"))?;
         let files_in_doubt = tokens[files_in_doubt_index];
         let files_in_doubt = files_in_doubt.parse().with_context(|| {
             format!("invalid files in doubt: {files_in_doubt}")
         })?;
 
-        let fileset_name_index =
-            index.fileset_name.ok_or(anyhow!("no fileset name index"))?;
+        let fileset_name_index = index
+            .fileset_name
+            .ok_or_else(|| anyhow!("no fileset name index"))?;
         let fileset_name = tokens[fileset_name_index].into();
 
         Ok(Self {

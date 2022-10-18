@@ -88,9 +88,15 @@ fn read_cache(cache: &Path) -> Result<Nsds> {
         let line = line?;
         let mut tokens = line.split(':');
 
-        let name = tokens.next().ok_or(anyhow!("no name token"))?.into();
+        let name = tokens
+            .next()
+            .ok_or_else(|| anyhow!("no name token"))?
+            .into();
         let server_list = vec![node.clone()];
-        let device = tokens.next().ok_or(anyhow!("no device token"))?.into();
+        let device = tokens
+            .next()
+            .ok_or_else(|| anyhow!("no device token"))?
+            .into();
 
         let nsd = Nsd {
             name,
@@ -298,17 +304,19 @@ impl Nsd {
 
 impl Nsd {
     fn from_tokens(tokens: &[&str], index: &Index) -> Result<Self> {
-        let name_index = index.name.ok_or(anyhow!("no disk name index"))?;
+        let name_index =
+            index.name.ok_or_else(|| anyhow!("no disk name index"))?;
         let name = tokens[name_index].into();
 
-        let server_list_index =
-            index.server_list.ok_or(anyhow!("no server list index"))?;
+        let server_list_index = index
+            .server_list
+            .ok_or_else(|| anyhow!("no server list index"))?;
         let server_list = tokens[server_list_index];
         let server_list = server_list.split(',').map(Into::into).collect();
 
         let local_name_index = index
             .local_name
-            .ok_or(anyhow!("no local disk name index"))?;
+            .ok_or_else(|| anyhow!("no local disk name index"))?;
         let local_name = tokens[local_name_index].into();
 
         Ok(Self {

@@ -137,21 +137,23 @@ impl Disk {
 impl Disk {
     fn from_tokens(tokens: &[&str], index: &Index) -> Result<Self> {
         let nsd_name_index =
-            index.nsd_name.ok_or(anyhow!("no NSD name index"))?;
+            index.nsd_name.ok_or_else(|| anyhow!("no NSD name index"))?;
         let nsd_name = tokens[nsd_name_index].into();
 
-        let is_metadata_index =
-            index.is_metadata.ok_or(anyhow!("no is metadata index"))?;
+        let is_metadata_index = index
+            .is_metadata
+            .ok_or_else(|| anyhow!("no is metadata index"))?;
         let is_metadata = tokens[is_metadata_index].parse::<Bool>()?.as_bool();
 
         let is_objectdata_index = index
             .is_objectdata
-            .ok_or(anyhow!("no is objectdata index"))?;
+            .ok_or_else(|| anyhow!("no is objectdata index"))?;
         let is_objectdata =
             tokens[is_objectdata_index].parse::<Bool>()?.as_bool();
 
-        let storage_pool_index =
-            index.storage_pool.ok_or(anyhow!("no storage pool index"))?;
+        let storage_pool_index = index
+            .storage_pool
+            .ok_or_else(|| anyhow!("no storage pool index"))?;
         let storage_pool = tokens[storage_pool_index].into();
 
         Ok(Self {
