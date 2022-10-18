@@ -21,7 +21,7 @@ use anyhow::{anyhow, Context, Result};
 /// fails.
 pub fn run(fs_name: &str) -> Result<Filesystem> {
     let mut cmd = Command::new("mmlspool");
-    cmd.arg(&fs_name);
+    cmd.arg(fs_name);
 
     let output = cmd
         .output()
