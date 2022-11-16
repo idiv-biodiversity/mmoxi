@@ -1,5 +1,6 @@
 //! Spectrum Scale library for tools.
 
+#![forbid(unsafe_code)]
 #![deny(clippy::all, missing_docs)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
