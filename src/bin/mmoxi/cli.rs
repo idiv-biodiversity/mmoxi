@@ -76,6 +76,20 @@ fn build_list() -> Command {
         .disable_help_flag(true)
         .disable_version_flag(true);
 
+    let list_cluster_mgr = Command::new("cluster")
+        .about("list cluster manager")
+        .disable_help_flag(true)
+        .disable_version_flag(true);
+
+    let list_mgr = Command::new("manager")
+        .about("list cluster and file system managers")
+        .alias("mgr")
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .subcommand_required(true)
+        .arg_required_else_help(true)
+        .subcommand(list_cluster_mgr);
+
     Command::new("list")
         .about("list commands")
         .alias("ls")
@@ -84,6 +98,7 @@ fn build_list() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(list_fs)
+        .subcommand(list_mgr)
 }
 
 pub fn build_prometheus() -> Command {

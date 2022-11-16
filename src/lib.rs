@@ -7,6 +7,7 @@
 pub mod disk;
 pub mod fileset;
 pub mod fs;
+pub mod mgr;
 pub mod nmon;
 pub mod nsd;
 pub mod pool;

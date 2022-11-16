@@ -39,6 +39,15 @@ fn dispatch_cache(args: &ArgMatches) -> Result<()> {
 fn dispatch_list(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
         Some(("filesystems", _args)) => run_list_filesystems(),
+        Some(("manager", args)) => dispatch_list_manager(args),
+
+        _ => Err(anyhow!("subcommand is required")),
+    }
+}
+
+fn dispatch_list_manager(args: &ArgMatches) -> Result<()> {
+    match args.subcommand() {
+        Some(("cluster", _args)) => run_list_mgr_cluster(),
 
         _ => Err(anyhow!("subcommand is required")),
     }
@@ -102,6 +111,14 @@ fn run_list_filesystems() -> Result<()> {
     for name in names {
         println!("{name}");
     }
+
+    Ok(())
+}
+
+fn run_list_mgr_cluster() -> Result<()> {
+    let managers = mmoxi::mgr::get()?;
+
+    println!("{}", managers.cluster().name());
 
     Ok(())
 }

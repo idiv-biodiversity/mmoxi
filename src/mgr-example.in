@@ -1,0 +1,5 @@
+mmlsmgr:clusterManager:HEADER:version:reserved:reserved:manager:
+mmlsmgr:filesystemManager:HEADER:version:reserved:reserved:filesystem:manager:managerIP:
+mmlsmgr:clusterManager:0:1:::filer1:
+mmlsmgr:filesystemManager:0:1:::gpfs1:filer2:10.10.21.2:
+mmlsmgr:filesystemManager:0:1:::gpfs2:filer3:10.10.21.3:
