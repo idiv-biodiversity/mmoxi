@@ -75,7 +75,7 @@ fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
     let output = args.value_of("output").unwrap();
 
     let output = File::create(output)
-        .with_context(|| format!("creating output file: {}", output))?;
+        .with_context(|| format!("creating output file: {output}"))?;
 
     let mut output = BufWriter::new(output);
 
@@ -116,11 +116,11 @@ fn run_pool_percent(args: &ArgMatches) -> Result<()> {
         .pools()
         .iter()
         .find(|pool| pool.name() == pool_arg)
-        .with_context(|| format!("pool {} not found", pool_arg))?;
+        .with_context(|| format!("pool {pool_arg} not found"))?;
 
     let data_pool_size = pool
         .data()
-        .with_context(|| format!("pool {} is not object data", pool_arg))?;
+        .with_context(|| format!("pool {pool_arg} is not object data"))?;
 
     println!("{}", data_pool_size.used_percent());
 

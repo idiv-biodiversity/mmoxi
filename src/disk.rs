@@ -20,7 +20,7 @@ pub fn disks<S: AsRef<str>>(fs_name: S) -> Result<Disks> {
 
     let output = cmd
         .output()
-        .with_context(|| format!("error running: {:?}", cmd))?;
+        .with_context(|| format!("error running: {cmd:?}"))?;
 
     Disks::from_reader(output.stdout.as_slice())
 }

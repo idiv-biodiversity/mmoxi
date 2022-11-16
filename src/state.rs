@@ -16,7 +16,7 @@ pub fn local_node_name() -> Result<String> {
 
     let output = cmd
         .output()
-        .with_context(|| format!("error running: {:?}", cmd))?;
+        .with_context(|| format!("error running: {cmd:?}"))?;
 
     let states = States::from_reader(output.stdout.as_slice())?;
 

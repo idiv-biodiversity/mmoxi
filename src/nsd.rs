@@ -24,7 +24,7 @@ pub fn all() -> Result<Nsds> {
 
     let output = cmd
         .output()
-        .with_context(|| format!("error running: {:?}", cmd))?;
+        .with_context(|| format!("error running: {cmd:?}"))?;
 
     Nsds::from_reader(output.stdout.as_slice())
 }
@@ -179,9 +179,8 @@ where
     let mut pooled = ByPool::default();
 
     for fs in crate::fs::names()? {
-        let disks = crate::disk::disks(&fs).with_context(|| {
-            format!("fetching disks for file system {}", fs)
-        })?;
+        let disks = crate::disk::disks(&fs)
+            .with_context(|| format!("fetching disks for file system {fs}"))?;
 
         for nsd in &nsds {
             if let Some(disk) =

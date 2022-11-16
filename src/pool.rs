@@ -25,11 +25,11 @@ pub fn run(fs_name: &str) -> Result<Filesystem> {
 
     let output = cmd
         .output()
-        .with_context(|| format!("error running: {:?}", cmd))?;
+        .with_context(|| format!("error running: {cmd:?}"))?;
 
     if output.status.success() {
         let output = String::from_utf8(output.stdout).with_context(|| {
-            format!("parsing {:?} command output to UTF8", cmd)
+            format!("parsing {cmd:?} command output to UTF8")
         })?;
 
         let pools = parse_mmlspool_output(&output)
@@ -216,7 +216,7 @@ fn parse_mmlspool_output(s: &str) -> Result<Vec<Pool>> {
     for line in s.lines().skip(2) {
         let pool = line
             .parse()
-            .with_context(|| format!("parsing pool line: {}", line))?;
+            .with_context(|| format!("parsing pool line: {line}"))?;
 
         pools.push(pool);
     }

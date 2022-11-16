@@ -16,7 +16,7 @@ pub fn names() -> Result<Vec<String>> {
 
     let output = cmd
         .output()
-        .with_context(|| format!("error running: {:?}", cmd))?;
+        .with_context(|| format!("error running: {cmd:?}"))?;
 
     let data = Filesystems::from_reader(output.stdout.as_slice())?;
 
