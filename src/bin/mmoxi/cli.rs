@@ -78,6 +78,7 @@ fn build_list() -> Command {
 
     Command::new("list")
         .about("list commands")
+        .alias("ls")
         .disable_help_flag(true)
         .disable_version_flag(true)
         .subcommand_required(true)
