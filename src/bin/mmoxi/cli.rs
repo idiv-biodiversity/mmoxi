@@ -1,20 +1,16 @@
+use std::path::PathBuf;
+
 use clap::{crate_name, crate_version};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 
 pub fn args() -> ArgMatches {
     build().get_matches()
 }
 
-pub fn build() -> Command<'static> {
-    let fs = Arg::new("filesystem")
-        .takes_value(true)
-        .required(true)
-        .help("file system");
+pub fn build() -> Command {
+    let fs = Arg::new("filesystem").required(true).help("file system");
 
-    let pool = Arg::new("pool")
-        .takes_value(true)
-        .required(true)
-        .help("pool name");
+    let pool = Arg::new("pool").required(true).help("pool name");
 
     let pool_percent = Command::new("pool-percent")
         .about("show pool used in percent")
@@ -35,7 +31,7 @@ pub fn build() -> Command<'static> {
         .subcommand(build_prometheus())
 }
 
-fn build_cache() -> Command<'static> {
+fn build_cache() -> Command {
     let cache_nmon = Command::new("nmon")
         .about("cache local NSD block devices for use with nmon")
         .arg(arg_device_cache())
@@ -73,7 +69,7 @@ fn build_cache() -> Command<'static> {
         .subcommand(cache_nsds)
 }
 
-fn build_list() -> Command<'static> {
+fn build_list() -> Command {
     let list_fs = Command::new("filesystems")
         .about("list file system names")
         .alias("fs")
@@ -89,7 +85,7 @@ fn build_list() -> Command<'static> {
         .subcommand(list_fs)
 }
 
-pub fn build_prometheus() -> Command<'static> {
+pub fn build_prometheus() -> Command {
     let prom_pool_block = Command::new("block")
         .about("Gather block device metrics grouped by pool.")
         .disable_help_flag(true)
@@ -133,27 +129,29 @@ pub fn build_prometheus() -> Command<'static> {
         .subcommand(prom_quota)
 }
 
-fn arg_device_cache() -> Arg<'static> {
+fn arg_device_cache() -> Arg {
     Arg::new("device-cache")
         .long("device-cache")
+        .value_parser(clap::value_parser!(PathBuf))
         .default_value(mmoxi::nsd::DEFAULT_LOCAL_DEVICE_CACHE)
         .help("local NSD block device cache")
         .long_help("Cache for local NSD block device associations.")
 }
 
-fn arg_force() -> Arg<'static> {
+fn arg_force() -> Arg {
     Arg::new("force")
         .short('f')
         .long("force")
+        .action(ArgAction::SetTrue)
         .help("force cache recreation")
         .long_help("Force recreating the cache.")
 }
 
-fn arg_output() -> Arg<'static> {
+fn arg_output() -> Arg {
     Arg::new("output")
         .short('o')
         .long("output")
-        .takes_value(true)
+        .value_parser(clap::value_parser!(PathBuf))
         .help("output file")
         .long_help("Output file.")
 }

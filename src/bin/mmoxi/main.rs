@@ -3,6 +3,7 @@
 
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use clap::ArgMatches;
@@ -66,16 +67,17 @@ fn dispatch_prom_pool(args: &ArgMatches) -> Result<()> {
 // ----------------------------------------------------------------------------
 
 fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
-    let force = args.is_present("force");
+    let force = args.contains_id("force");
 
     // UNWRAP has default
-    let device_cache = args.value_of("device-cache").unwrap();
+    let device_cache = args.get_one::<PathBuf>("device-cache").unwrap();
 
     // UNWRAP has default
-    let output = args.value_of("output").unwrap();
+    let output = args.get_one::<PathBuf>("output").unwrap();
 
-    let output = File::create(output)
-        .with_context(|| format!("creating output file: {output}"))?;
+    let output = File::create(output).with_context(|| {
+        format!("creating output file: {}", output.display())
+    })?;
 
     let mut output = BufWriter::new(output);
 
@@ -83,10 +85,10 @@ fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
 }
 
 fn run_cache_nsds(args: &ArgMatches) -> Result<()> {
-    let force = args.is_present("force");
+    let force = args.contains_id("force");
 
     // UNWRAP has default
-    let output = args.value_of("output").unwrap();
+    let output = args.get_one::<PathBuf>("output").unwrap();
 
     let _nsds = mmoxi::nsd::local_cached(output, force)?;
 
@@ -105,12 +107,13 @@ fn run_list_filesystems() -> Result<()> {
 
 fn run_pool_percent(args: &ArgMatches) -> Result<()> {
     let filesystem = args
-        .value_of("filesystem")
+        .get_one::<String>("filesystem")
         .context("no filesystem argument")?;
 
     let filesystem = mmoxi::pool::run(filesystem)?;
 
-    let pool_arg = args.value_of("pool").context("no pool argument")?;
+    let pool_arg =
+        args.get_one::<String>("pool").context("no pool argument")?;
 
     let pool = filesystem
         .pools()
@@ -131,9 +134,9 @@ fn run_prom_pool_block(args: &ArgMatches) -> Result<()> {
     let mut output = output_to_bufwriter(args)?;
 
     // UNWRAP has default
-    let device_cache = args.value_of("device-cache").unwrap();
+    let device_cache = args.get_one::<PathBuf>("device-cache").unwrap();
 
-    let force = args.is_present("force");
+    let force = args.contains_id("force");
 
     let metrics = mmoxi::prom::pool_block_device_metrics(device_cache, force)?;
     metrics.to_prom(&mut output)?;
@@ -170,9 +173,9 @@ fn run_prom_quota(args: &ArgMatches) -> Result<()> {
 fn output_to_bufwriter(
     args: &ArgMatches,
 ) -> Result<BufWriter<Box<dyn Write>>> {
-    let output = args.value_of("output");
+    let output = args.get_one::<PathBuf>("output");
 
-    let output: Box<dyn Write> = if let Some(output) = output {
+    let output: Box<dyn Write> = if let Some(ref output) = output {
         Box::new(File::create(output)?)
     } else {
         Box::new(io::stdout())
