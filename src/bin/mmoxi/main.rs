@@ -46,6 +46,7 @@ fn dispatch_list(args: &ArgMatches) -> Result<()> {
 
 fn dispatch_prom(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
+        Some(("fileset", args)) => run_prom_fileset(args),
         Some(("pool", args)) => dispatch_prom_pool(args),
         Some(("quota", args)) => run_prom_quota(args),
 
@@ -126,6 +127,20 @@ fn run_pool_percent(args: &ArgMatches) -> Result<()> {
         .with_context(|| format!("pool {pool_arg} is not object data"))?;
 
     println!("{}", data_pool_size.used_percent());
+
+    Ok(())
+}
+
+fn run_prom_fileset(args: &ArgMatches) -> Result<()> {
+    let mut output = output_to_bufwriter(args)?;
+
+    let mut filesets = vec![];
+
+    for fs in mmoxi::fs::names()? {
+        filesets.extend(mmoxi::fileset::filesets(&fs)?);
+    }
+
+    mmoxi::prom::write_fileset_metrics(&filesets, &mut output)?;
 
     Ok(())
 }

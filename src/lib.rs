@@ -5,6 +5,7 @@
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 pub mod disk;
+pub mod fileset;
 pub mod fs;
 pub mod nmon;
 pub mod nsd;
