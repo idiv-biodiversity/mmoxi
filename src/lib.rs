@@ -4,6 +4,7 @@
 #![deny(clippy::all, missing_docs)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
+pub mod df;
 pub mod disk;
 pub mod fileset;
 pub mod fs;

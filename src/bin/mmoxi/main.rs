@@ -1,6 +1,7 @@
 #![deny(clippy::all)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::PathBuf;
@@ -55,6 +56,7 @@ fn dispatch_list_manager(args: &ArgMatches) -> Result<()> {
 
 fn dispatch_prom(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
+        Some(("df", args)) => run_prom_df(args),
         Some(("fileset", args)) => run_prom_fileset(args),
         Some(("pool", args)) => dispatch_prom_pool(args),
         Some(("quota", args)) => run_prom_quota(args),
@@ -144,6 +146,38 @@ fn run_pool_percent(args: &ArgMatches) -> Result<()> {
         .with_context(|| format!("pool {pool_arg} is not object data"))?;
 
     println!("{}", data_pool_size.used_percent());
+
+    Ok(())
+}
+
+fn run_prom_df(args: &ArgMatches) -> Result<()> {
+    let mut output = output_to_bufwriter(args)?;
+
+    let mut all_nsds: HashMap<String, Vec<mmoxi::df::Nsd>> =
+        HashMap::default();
+
+    let mut all_pools: HashMap<String, Vec<mmoxi::df::Pool>> =
+        HashMap::default();
+
+    let mut all_totals: HashMap<String, mmoxi::df::Filesystem> =
+        HashMap::default();
+
+    for fs in mmoxi::fs::names()? {
+        let mmoxi::df::Data {
+            fs,
+            nsds,
+            pools,
+            total,
+        } = mmoxi::df::run(&fs)?;
+
+        all_nsds.insert(fs.clone(), nsds);
+        all_pools.insert(fs.clone(), pools);
+        all_totals.insert(fs, total);
+    }
+
+    mmoxi::prom::write_df_nsd_metrics(&all_nsds, &mut output)?;
+    mmoxi::prom::write_df_pool_metrics(&all_pools, &mut output)?;
+    mmoxi::prom::write_df_total_metrics(&all_totals, &mut output)?;
 
     Ok(())
 }

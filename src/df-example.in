@@ -1,0 +1,12 @@
+mmdf:nsd:HEADER:version:reserved:reserved:nsdName:storagePool:diskSize:failureGroup:metadata:data:freeBlocks:freeBlocksPct:freeFragments:freeFragmentsPct:diskAvailableForAlloc:
+mmdf:poolTotal:HEADER:version:reserved:reserved:poolName:poolSize:freeBlocks:freeBlocksPct:freeFragments:freeFragmentsPct:maxDiskSize:
+mmdf:data:HEADER:version:reserved:reserved:totalData:freeBlocks:freeBlocksPct:freeFragments:freeFragmentsPct:
+mmdf:metadata:HEADER:version:reserved:reserved:totalMetadata:freeBlocks:freeBlocksPct:freeFragments:freeFragmentsPct:
+mmdf:fsTotal:HEADER:version:reserved:reserved:fsSize:freeBlocks:freeBlocksPct:freeFragments:freeFragmentsPct:
+mmdf:inode:HEADER:version:reserved:reserved:usedInodes:freeInodes:allocatedInodes:maxInodes:
+mmdf:nsd:0:1:::filer3_nvme02:nvme:6251223376:66:No:Yes:2703523840:43:621356336:10::
+mmdf:nsd:0:1:::filer3_nvme03:nvme:6251223376:66:No:Yes:2696495104:43:621595888:10::
+mmdf:nsd:0:1:::filer3_nvme04:nvme:6251223376:66:No:Yes:2703433728:43:618577952:10::
+mmdf:poolTotal:0:1:::system:50009787008:34200018944:68:1056310560:2:53133426688:
+mmdf:poolTotal:0:1:::nvme:350068509056:98512142336:28:39131446656:11:277763571712:
+mmdf:fsTotal:0:1:::5055008965696:2115551961088:42:92600022848:2:

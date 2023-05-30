@@ -102,6 +102,13 @@ fn build_list() -> Command {
 }
 
 pub fn build_prometheus() -> Command {
+    let prom_df = Command::new("df")
+        .about("Gather metrics from mmdf.")
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .arg(arg_output())
+        .after_long_help("Run on cluster manager only.");
+
     let prom_fileset = Command::new("fileset")
         .about("Gather fileset metrics.")
         .disable_help_flag(true)
@@ -151,6 +158,7 @@ pub fn build_prometheus() -> Command {
         .disable_version_flag(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
+        .subcommand(prom_df)
         .subcommand(prom_fileset)
         .subcommand(prom_pool)
         .subcommand(prom_quota)

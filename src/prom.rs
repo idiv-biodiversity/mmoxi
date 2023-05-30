@@ -10,6 +10,312 @@ use crate::fileset::Fileset;
 use crate::nsd::FsPoolId;
 use crate::sysfs;
 
+/// Writes the `mmdf` NSD data as prometheus metrics to `output`.
+///
+/// # Errors
+///
+/// This function uses [`writeln`] to write to `output`. It can only fail if
+/// any of these [`writeln`] fails.
+pub fn write_df_nsd_metrics<H, O>(
+    nsds: &HashMap<String, Vec<crate::df::Nsd>, H>,
+    output: &mut O,
+) -> Result<()>
+where
+    H: std::hash::BuildHasher,
+    O: Write,
+{
+    writeln!(
+        output,
+        "# HELP gpfs_df_nsd_size GPFS mmdf NSD size in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_nsd_size gauge")?;
+
+    for (fs, nsds) in nsds {
+        for nsd in nsds {
+            writeln!(
+                output,
+                "gpfs_df_nsd_size{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                nsd.name(),
+                nsd.pool(),
+                nsd.holds_metadata(),
+                nsd.holds_objectdata(),
+                nsd.size(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_nsd_free_blocks GPFS mmdf NSD free blocks in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_nsd_free_blocks gauge")?;
+
+    for (fs, nsds) in nsds {
+        for nsd in nsds {
+            writeln!(
+                output,
+                "gpfs_df_nsd_free_blocks{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                nsd.name(),
+                nsd.pool(),
+                nsd.holds_metadata(),
+                nsd.holds_objectdata(),
+                nsd.free_blocks(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_nsd_free_blocks_percent GPFS mmdf NSD free blocks percent"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_nsd_free_blocks_percent gauge")?;
+
+    for (fs, nsds) in nsds {
+        for nsd in nsds {
+            writeln!(
+                output,
+                "gpfs_df_nsd_free_blocks_percent{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                nsd.name(),
+                nsd.pool(),
+                nsd.holds_metadata(),
+                nsd.holds_objectdata(),
+                nsd.free_blocks_percent(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_nsd_free_fragments GPFS mmdf NSD free fragments in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_nsd_free_fragments gauge")?;
+
+    for (fs, nsds) in nsds {
+        for nsd in nsds {
+            writeln!(
+                output,
+                "gpfs_df_nsd_free_fragments{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                nsd.name(),
+                nsd.pool(),
+                nsd.holds_metadata(),
+                nsd.holds_objectdata(),
+                nsd.free_fragments(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_nsd_free_fragments_percent GPFS mmdf NSD free fragments percent"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_nsd_free_fragments_percent gauge")?;
+
+    for (fs, nsds) in nsds {
+        for nsd in nsds {
+            writeln!(
+                output,
+                "gpfs_df_nsd_free_fragments_percent{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                nsd.name(),
+                nsd.pool(),
+                nsd.holds_metadata(),
+                nsd.holds_objectdata(),
+                nsd.free_fragments_percent(),
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Writes the `mmdf` pool data as prometheus metrics to `output`.
+///
+/// # Errors
+///
+/// This function uses [`writeln`] to write to `output`. It can only fail if
+/// any of these [`writeln`] fails.
+pub fn write_df_pool_metrics<H, O>(
+    pools: &HashMap<String, Vec<crate::df::Pool>, H>,
+    output: &mut O,
+) -> Result<()>
+where
+    H: std::hash::BuildHasher,
+    O: Write,
+{
+    writeln!(
+        output,
+        "# HELP gpfs_df_pool_size GPFS mmdf pool size in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_pool_size gauge")?;
+
+    for (fs, pools) in pools {
+        for pool in pools {
+            writeln!(
+                output,
+                "gpfs_df_pool_size{{name=\"{}\",fs=\"{fs}\"}} {}",
+                pool.name(),
+                pool.size(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_pool_free_blocks GPFS mmdf pool free blocks in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_pool_free_blocks gauge")?;
+
+    for (fs, pools) in pools {
+        for pool in pools {
+            writeln!(
+                output,
+                "gpfs_df_pool_free_blocks{{name=\"{}\",fs=\"{fs}\"}} {}",
+                pool.name(),
+                pool.free_blocks(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_pool_free_blocks_percent GPFS mmdf pool free blocks percent"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_pool_free_blocks_percent gauge")?;
+
+    for (fs, pools) in pools {
+        for pool in pools {
+            writeln!(
+                output,
+                "gpfs_df_pool_free_blocks_percent{{name=\"{}\",fs=\"{fs}\"}} {}",
+                pool.name(),
+                pool.free_blocks_percent(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_pool_free_fragments GPFS mmdf pool free fragments in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_pool_free_fragments gauge")?;
+
+    for (fs, pools) in pools {
+        for pool in pools {
+            writeln!(
+                output,
+                "gpfs_df_pool_free_fragments{{name=\"{}\",fs=\"{fs}\"}} {}",
+                pool.name(),
+                pool.free_fragments(),
+            )?;
+        }
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_pool_free_fragments_percent GPFS mmdf pool free fragments percent"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_pool_free_fragments_percent gauge")?;
+
+    for (fs, pools) in pools {
+        for pool in pools {
+            writeln!(
+                output,
+                "gpfs_df_pool_free_fragments_percent{{name=\"{}\",fs=\"{fs}\"}} {}",
+                pool.name(),
+                pool.free_fragments_percent(),
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Writes the `mmdf` file system total as prometheus metrics to `output`.
+///
+/// # Errors
+///
+/// This function uses [`writeln`] to write to `output`. It can only fail if
+/// any of these [`writeln`] fails.
+pub fn write_df_total_metrics<H, O>(
+    filesystems: &HashMap<String, crate::df::Filesystem, H>,
+    output: &mut O,
+) -> Result<()>
+where
+    H: std::hash::BuildHasher,
+    O: Write,
+{
+    writeln!(
+        output,
+        "# HELP gpfs_df_fs_size GPFS mmdf pool size in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_fs_size gauge")?;
+
+    for (fs_name, fs) in filesystems {
+        writeln!(
+            output,
+            "gpfs_df_fs_size{{name=\"{fs_name}\"}} {}",
+            fs.size(),
+        )?;
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_fs_free_blocks GPFS mmdf pool free blocks in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_fs_free_blocks gauge")?;
+
+    for (fs_name, fs) in filesystems {
+        writeln!(
+            output,
+            "gpfs_df_fs_free_blocks{{name=\"{fs_name}\"}} {}",
+            fs.free_blocks(),
+        )?;
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_fs_free_blocks_percent GPFS mmdf pool free blocks percent"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_fs_free_blocks_percent gauge")?;
+
+    for (fs_name, fs) in filesystems {
+        writeln!(
+            output,
+            "gpfs_df_fs_free_blocks_percent{{name=\"{fs_name}\"}} {}",
+            fs.free_blocks_percent(),
+        )?;
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_fs_free_fragments GPFS mmdf pool free fragments in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_fs_free_fragments gauge")?;
+
+    for (fs_name, fs) in filesystems {
+        writeln!(
+            output,
+            "gpfs_df_fs_free_fragments{{name=\"{fs_name}\"}} {}",
+            fs.free_fragments(),
+        )?;
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_df_fs_free_fragments_percent GPFS mmdf pool free fragments percent"
+    )?;
+    writeln!(output, "# TYPE gpfs_df_fs_free_fragments_percent gauge")?;
+
+    for (fs_name, fs) in filesystems {
+        writeln!(
+            output,
+            "gpfs_df_fs_free_fragments_percent{{name=\"{fs_name}\"}} {}",
+            fs.free_fragments_percent(),
+        )?;
+    }
+
+    Ok(())
+}
+
 /// Writes the filesets' information as prometheus metrics to `output`.
 ///
 /// # Errors
