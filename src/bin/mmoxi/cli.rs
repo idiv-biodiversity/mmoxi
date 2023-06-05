@@ -113,11 +113,14 @@ pub fn build_prometheus() -> Command {
         .subcommand(prom_pool_usage);
 
     let prom_quota = Command::new("quota")
-        .about("Quota metrics.")
+        .about("Gather quota metrics.")
         .disable_help_flag(true)
         .disable_version_flag(true)
         .arg(arg_output())
-        .after_long_help("Run every hour on cluster manager only.");
+        .after_long_help(
+"Run every hour on cluster manager only. This command expects piped output \
+ from one or more `mmrepquota` commands, e.g. `{ mmrepquota -Y -j gpfs1; \
+ mmrepquota -Y -u gpfs1:work; } | mmoxi prom quota");
 
     Command::new("prometheus")
         .about("prometheus metrics")
