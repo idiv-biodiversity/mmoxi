@@ -15,3 +15,4 @@ pub mod prom;
 pub mod quota;
 pub mod state;
 pub mod sysfs;
+pub mod util;

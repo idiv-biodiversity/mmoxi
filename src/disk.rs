@@ -2,9 +2,10 @@
 
 use std::io::BufRead;
 use std::process::Command;
-use std::str::FromStr;
 
 use anyhow::{anyhow, Context, Result};
+
+use crate::util::MMBool;
 
 /// Returns the disks.
 ///
@@ -142,13 +143,14 @@ impl Disk {
         let is_metadata_index = index
             .is_metadata
             .ok_or_else(|| anyhow!("no is metadata index"))?;
-        let is_metadata = tokens[is_metadata_index].parse::<Bool>()?.as_bool();
+        let is_metadata =
+            tokens[is_metadata_index].parse::<MMBool>()?.as_bool();
 
         let is_objectdata_index = index
             .is_objectdata
             .ok_or_else(|| anyhow!("no is objectdata index"))?;
         let is_objectdata =
-            tokens[is_objectdata_index].parse::<Bool>()?.as_bool();
+            tokens[is_objectdata_index].parse::<MMBool>()?.as_bool();
 
         let storage_pool_index = index
             .storage_pool
@@ -180,33 +182,6 @@ fn header_to_index(tokens: &[&str], index: &mut Index) {
             "data" => index.is_objectdata = Some(i),
             "storagePool" => index.storage_pool = Some(i),
             _ => {}
-        }
-    }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-enum Bool {
-    Yes,
-    No,
-}
-
-impl Bool {
-    const fn as_bool(self) -> bool {
-        match self {
-            Self::Yes => true,
-            Self::No => false,
-        }
-    }
-}
-
-impl FromStr for Bool {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "yes" => Ok(Self::Yes),
-            "no" => Ok(Self::No),
-            unknown => Err(anyhow!("unknown bool: {}", unknown)),
         }
     }
 }
