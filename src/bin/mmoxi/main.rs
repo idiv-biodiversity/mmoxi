@@ -69,6 +69,9 @@ fn dispatch_prom_pool(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
         Some(("block", args)) => run_prom_pool_block(args),
         Some(("usage", args)) => run_prom_pool_usage(args),
+        Some(("user-distribution", args)) => {
+            run_prom_pool_user_distribution(args)
+        }
 
         _ => Err(anyhow!("subcommand is required")),
     }
@@ -146,6 +149,50 @@ fn run_pool_percent(args: &ArgMatches) -> Result<()> {
         .with_context(|| format!("pool {pool_arg} is not object data"))?;
 
     println!("{}", data_pool_size.used_percent());
+
+    Ok(())
+}
+
+fn run_prom_pool_user_distribution(args: &ArgMatches) -> Result<()> {
+    let mut output = output_to_bufwriter(args)?;
+
+    let device_or_dir = args
+        .get_one::<String>("device-or-dir")
+        .context("device or directory is required")?;
+
+    let pool = args.get_one::<String>("pool").context("pool is required")?;
+
+    let fileset = args.get_one::<String>("fileset");
+
+    let nodes = args.get_one::<String>("nodes");
+
+    let local_work_dir = args.get_one::<PathBuf>("local-work-dir");
+    let global_work_dir = args.get_one::<PathBuf>("global-work-dir");
+
+    let scope = args.get_one::<String>("scope");
+
+    let mut user_sizes = mmoxi::policy::pool_user_distribution::run(
+        device_or_dir,
+        pool,
+        fileset,
+        nodes,
+        local_work_dir,
+        global_work_dir,
+        scope,
+    )?;
+
+    let mut named_user_sizes = HashMap::with_capacity(user_sizes.len());
+
+    for (user, data) in user_sizes.drain() {
+        let user = mmoxi::user::by_uid(&user).unwrap_or(user);
+        named_user_sizes.insert(user, data);
+    }
+
+    mmoxi::prom::write_pool_user_distribution(
+        pool,
+        &named_user_sizes,
+        &mut output,
+    )?;
 
     Ok(())
 }

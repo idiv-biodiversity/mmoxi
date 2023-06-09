@@ -16,6 +16,68 @@ use crate::sysfs;
 ///
 /// This function uses [`writeln`] to write to `output`. It can only fail if
 /// any of these [`writeln`] fails.
+pub fn write_pool_user_distribution<H, O>(
+    pool: impl AsRef<str>,
+    data: &HashMap<String, crate::policy::pool_user_distribution::Data, H>,
+    output: &mut O,
+) -> Result<()>
+where
+    H: std::hash::BuildHasher,
+    O: Write,
+{
+    let pool = pool.as_ref();
+
+    writeln!(
+        output,
+        "# HELP gpfs_pool_user_distribution_files GPFS pool files per user"
+    )?;
+    writeln!(output, "# TYPE gpfs_pool_user_distribution_files gauge")?;
+
+    for (user, data) in data {
+        writeln!(
+            output,
+            "gpfs_pool_user_distribution_files{{pool=\"{}\",user=\"{}\"}} {}",
+            pool, user, data.files,
+        )?;
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_pool_user_distribution_file_size GPFS pool file size per user in bytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_pool_user_distribution_file_size gauge")?;
+
+    for (user, data) in data {
+        writeln!(
+            output,
+            "gpfs_pool_user_distribution_file_size{{pool=\"{}\",user=\"{}\"}} {}",
+            pool, user, data.file_size,
+        )?;
+    }
+
+    writeln!(
+        output,
+        "# HELP gpfs_pool_user_distribution_allocated GPFS pool allocated storage per user in kilobytes"
+    )?;
+    writeln!(output, "# TYPE gpfs_pool_user_distribution_allocated gauge")?;
+
+    for (user, data) in data {
+        writeln!(
+            output,
+            "gpfs_pool_user_distribution_allocated{{pool=\"{}\",user=\"{}\"}} {}",
+            pool, user, data.kb_allocated,
+        )?;
+    }
+
+    Ok(())
+}
+
+/// Writes the `mmdf` NSD data as prometheus metrics to `output`.
+///
+/// # Errors
+///
+/// This function uses [`writeln`] to write to `output`. It can only fail if
+/// any of these [`writeln`] fails.
 pub fn write_df_nsd_metrics<H, O>(
     nsds: &HashMap<String, Vec<crate::df::Nsd>, H>,
     output: &mut O,

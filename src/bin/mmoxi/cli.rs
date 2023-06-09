@@ -1,5 +1,7 @@
+use std::fs;
 use std::path::PathBuf;
 
+use clap::builder::PossibleValuesParser;
 use clap::{crate_name, crate_version};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
@@ -10,14 +12,12 @@ pub fn args() -> ArgMatches {
 pub fn build() -> Command {
     let fs = Arg::new("filesystem").required(true).help("file system");
 
-    let pool = Arg::new("pool").required(true).help("pool name");
-
     let pool_percent = Command::new("pool-percent")
         .about("show pool used in percent")
         .disable_help_flag(true)
         .disable_version_flag(true)
         .arg(fs)
-        .arg(pool);
+        .arg(arg_pool());
 
     Command::new(crate_name!())
         .version(crate_version!())
@@ -116,6 +116,18 @@ pub fn build_prometheus() -> Command {
         .arg(arg_output())
         .after_long_help("Run on cluster manager only.");
 
+    let prom_pool_user_distribution = Command::new("user-distribution")
+        .about("Gather usage per user for a pool.")
+        .alias("udistri")
+        .arg(arg_output())
+        .args(policy_args())
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .after_long_help(
+"This is useful to figure out which users are heavily using expensive storage \
+ pools like NVME storage. Run on cluster manager only."
+        );
+
     let prom_pool_block = Command::new("block")
         .about("Gather block device metrics grouped by pool.")
         .disable_help_flag(true)
@@ -139,7 +151,8 @@ pub fn build_prometheus() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(prom_pool_block)
-        .subcommand(prom_pool_usage);
+        .subcommand(prom_pool_usage)
+        .subcommand(prom_pool_user_distribution);
 
     let prom_quota = Command::new("quota")
         .about("Gather quota metrics.")
@@ -163,6 +176,10 @@ pub fn build_prometheus() -> Command {
         .subcommand(prom_pool)
         .subcommand(prom_quota)
 }
+
+// ----------------------------------------------------------------------------
+// arguments
+// ----------------------------------------------------------------------------
 
 fn arg_device_cache() -> Arg {
     Arg::new("device-cache")
@@ -189,4 +206,103 @@ fn arg_output() -> Arg {
         .value_parser(clap::value_parser!(PathBuf))
         .help("output file")
         .long_help("Output file.")
+}
+
+fn arg_pool() -> Arg {
+    Arg::new("pool")
+        .required(true)
+        .action(ArgAction::Set)
+        .help("pool name")
+        .long_help("Specify pool name.")
+        .value_name("pool")
+}
+
+fn policy_args() -> Vec<Arg> {
+    vec![
+        Arg::new("device-or-dir")
+            .required(true)
+            .action(ArgAction::Set)
+            .help("device or directory")
+            .long_help("Specify device or directory to use with `mmapplypolicy`.")
+            .value_name("Device|Directory"),
+
+        arg_pool(),
+
+        Arg::new("fileset")
+            .long("fileset")
+            .action(ArgAction::Set)
+            .help("filter by fileset")
+            .long_help("Filter by fileset.")
+            .value_name("fileset"),
+
+        Arg::new("nodes")
+            .short('N')
+            .long("nodes")
+            .action(ArgAction::Set)
+            .help("use for mmapplypolicy -N argument")
+            .long_help(
+"Specify list of nodes to use with `mmapplypolicy -N`. For detailed \
+ information, see `man mmapplypolicy`.",
+            )
+            .value_name("all|mount|Node,...|NodeFile|NodeClass"),
+
+        Arg::new("global-work-dir")
+            .short('g')
+            .long("global-work-dir")
+            .help("use for mmapplypolicy -g argument")
+            .long_help(
+"Specify global work directory to use with `mmapplypolicy -g`. For detailed \
+ information, see `man mmapplypolicy`.",
+            )
+            .action(ArgAction::Set)
+            .value_name("dir")
+            .value_parser(is_dir),
+
+        Arg::new("local-work-dir")
+            .short('s')
+            .long("local-work-dir")
+            .help("use for mmapplypolicy -s argument and policy output")
+            .long_help(
+"Specify local work directory to use with `mmapplypolicy -s`. Also, the \
+ output of the LIST policies will be written to this directory temporarily \
+ before being processed by this tool. Defaults to the system temporary \
+ directory. This might be too small for large directories, e.g. more than 30 \
+ GiB are needed for a directory with 180 million files. For detailed \
+ information about the `-s` argument, see `man mmapplypolicy`.",
+            )
+            .action(ArgAction::Set)
+            .value_name("dir")
+            .value_parser(is_dir),
+
+        Arg::new("scope")
+            .long("scope")
+            .help("specify scope of the policy scan")
+            .long_help(
+"Specify the scope of the policy scan. For detailed information, see `man \
+ mmapplypolicy`."
+            )
+            .action(ArgAction::Set)
+            .value_name("filesystem|inodespace|fileset")
+            .value_parser(PossibleValuesParser::new(
+                ["filesystem", "inodespace", "fileset"]
+            ))
+    ]
+}
+
+// ----------------------------------------------------------------------------
+// value parser
+// ----------------------------------------------------------------------------
+
+fn is_dir(s: &str) -> Result<PathBuf, String> {
+    let path = PathBuf::from(s);
+
+    if !path.exists() {
+        Err(format!("does not exist: {path:?}"))
+    } else if !path.is_dir() {
+        Err(format!("is not a directory: {path:?}"))
+    } else if let Err(error) = fs::read_dir(&path) {
+        Err(error.to_string())
+    } else {
+        Ok(path)
+    }
 }
