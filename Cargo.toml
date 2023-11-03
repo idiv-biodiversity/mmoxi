@@ -1,6 +1,6 @@
 [package]
 name = "mmoxi"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Christian Krause <christian.krause@idiv.org>"]
 description = "spectrum scale tools"
 license = "GPL-3.0-or-later"
