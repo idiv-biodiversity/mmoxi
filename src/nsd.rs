@@ -236,8 +236,6 @@ impl Nsds {
     }
 
     /// Returns the underlying collection.
-    // ALLOW false positive: constant functions cannot evaluate destructors
-    #[allow(clippy::missing_const_for_fn)]
     #[must_use]
     pub fn into_inner(self) -> Vec<Nsd> {
         self.0

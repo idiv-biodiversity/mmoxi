@@ -76,8 +76,6 @@ impl State {
     }
 
     /// Returns the node name.
-    // ALLOW false positive: constant functions cannot evaluate destructors
-    #[allow(clippy::missing_const_for_fn)]
     #[must_use]
     pub fn into_name(self) -> String {
         self.name
