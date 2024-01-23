@@ -119,7 +119,7 @@ fn write_cache(cache: &Path) -> Result<Nsds> {
 
     let mut cache = BufWriter::new(cache);
 
-    for nsd in nsds.iter() {
+    for nsd in &nsds {
         writeln!(cache, "{}:{}", nsd.name(), nsd.device())?;
     }
 
@@ -250,6 +250,15 @@ impl IntoIterator for Nsds {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Nsds {
+    type Item = &'a Nsd;
+    type IntoIter = std::slice::Iter<'a, Nsd>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 

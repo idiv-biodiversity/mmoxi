@@ -75,6 +75,15 @@ impl IntoIterator for Disks {
     }
 }
 
+impl<'a> IntoIterator for &'a Disks {
+    type Item = &'a Disk;
+    type IntoIter = std::slice::Iter<'a, Disk>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 impl Extend<Disk> for Disks {
     fn extend<T: IntoIterator<Item = Disk>>(&mut self, iter: T) {
         for elem in iter {
