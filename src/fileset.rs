@@ -12,6 +12,7 @@ pub struct Fileset {
     fileset_name: String,
     max_inodes: u64,
     alloc_inodes: u64,
+    comment: Option<String>,
 }
 
 impl Fileset {
@@ -37,6 +38,12 @@ impl Fileset {
     #[must_use]
     pub const fn alloc_inodes(&self) -> u64 {
         self.alloc_inodes
+    }
+
+    /// Optionally returns the comment.
+    #[must_use]
+    pub const fn comment(&self) -> Option<&String> {
+        self.comment.as_ref()
     }
 }
 
@@ -99,6 +106,7 @@ struct Index {
     fileset_name: Option<usize>,
     max_inodes: Option<usize>,
     alloc_inodes: Option<usize>,
+    comment: Option<usize>,
 }
 
 fn from_reader<Input: BufRead>(input: Input) -> Result<Vec<Fileset>> {
@@ -147,11 +155,17 @@ fn from_tokens(tokens: &[&str], index: &Index) -> Result<Fileset> {
         .parse()
         .with_context(|| "parsing allocInodes value")?;
 
+    let comment_index =
+        index.comment.ok_or_else(|| anyhow!("no comment index"))?;
+    let comment = tokens[comment_index].replace("%3A", ":");
+    let comment = Some(comment).filter(|s| !s.is_empty());
+
     Ok(Fileset {
         filesystem_name,
         fileset_name,
         max_inodes,
         alloc_inodes,
+        comment,
     })
 }
 
@@ -162,6 +176,7 @@ fn header_to_index(tokens: &[&str], index: &mut Index) {
             "filesetName" => index.fileset_name = Some(i),
             "maxInodes" => index.max_inodes = Some(i),
             "allocInodes" => index.alloc_inodes = Some(i),
+            "comment" => index.comment = Some(i),
             _ => {}
         }
     }
@@ -189,6 +204,7 @@ mod tests {
                 fileset_name: "public".into(),
                 max_inodes: 20_971_520,
                 alloc_inodes: 5_251_072,
+                comment: None,
             })
         );
 
@@ -199,6 +215,18 @@ mod tests {
                 fileset_name: "work".into(),
                 max_inodes: 295_313_408,
                 alloc_inodes: 260_063_232,
+                comment: None,
+            })
+        );
+
+        assert_eq!(
+            filesets.next(),
+            Some(Fileset {
+                filesystem_name: "gpfs1".into(),
+                fileset_name: "data_foo".into(),
+                max_inodes: 20_000_768,
+                alloc_inodes: 1_032_192,
+                comment: Some("end of project: 2026-11".into()),
             })
         );
 
