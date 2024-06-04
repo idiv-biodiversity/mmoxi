@@ -109,6 +109,13 @@ pub fn build_prometheus() -> Command {
         .arg(arg_output())
         .after_long_help("Run on cluster manager only.");
 
+    let prom_disk = Command::new("disk")
+        .about("Gather metrics from mmlsdisk.")
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .arg(arg_output())
+        .after_long_help("Run on cluster manager only.");
+
     let prom_fileset = Command::new("fileset")
         .about("Gather fileset metrics.")
         .disable_help_flag(true)
@@ -172,6 +179,7 @@ pub fn build_prometheus() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(prom_df)
+        .subcommand(prom_disk)
         .subcommand(prom_fileset)
         .subcommand(prom_pool)
         .subcommand(prom_quota)

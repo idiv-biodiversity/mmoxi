@@ -1,4 +1,5 @@
 mmlsdisk::HEADER:version:reserved:reserved:nsdName:driverType:sectorSize:failureGroup:metadata:data:status:availability:diskID:storagePool:remarks:numQuorumDisks:readQuorumValue:writeQuorumValue:diskSizeKB:diskUID:thinDiskType:replicaType:
 mmlsdisk::0:1:::disk1:nsd:512:1:Yes:No:ready:up:42:system::3:2:2:1869606912:0A0A141A5AFAE37E:::
-mmlsdisk::0:1:::disk2:nsd:512:1:No:Yes:ready:up:43:nvme::3:2:2:1869606912:0A0A141A5AFAE386:::
-mmlsdisk::0:1:::disk3:nsd:512:1:No:Yes:ready:up:44:nlsas::3:2:2:1869606912:0A0A141A5AFAE382:::
+mmlsdisk::0:1:::disk2:nsd:512:1:No:Yes:ready:down:43:nvme::3:2:2:1869606912:0A0A141A5AFAE386:::
+mmlsdisk::0:1:::disk3:nsd:512:1:No:Yes:ready:recovering:44:nlsas::3:2:2:1869606912:0A0A141A5AFAE382:::
+mmlsdisk::0:1:::disk4:nsd:512:1:No:Yes:ready:unrecovered:45:nlsas::3:2:2:1869606912:0A0A141A5AFAE382:::

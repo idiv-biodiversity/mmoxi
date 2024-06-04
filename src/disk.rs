@@ -1,7 +1,10 @@
 //! `mmlsdisk` parsing.
 
-use std::io::BufRead;
+use std::collections::HashMap;
+use std::fmt::Display;
+use std::io::{BufRead, Write};
 use std::process::Command;
+use std::str::FromStr;
 
 use anyhow::{anyhow, Context, Result};
 
@@ -12,7 +15,7 @@ use crate::util::MMBool;
 /// # Errors
 ///
 /// Returns an error if running `mmlsdisk` fails or if parsing its output fails.
-pub fn disks<S: AsRef<str>>(fs_name: S) -> Result<Disks> {
+pub fn disks(fs_name: impl AsRef<str>) -> Result<Disks> {
     let fs_name = fs_name.as_ref();
 
     let mut cmd = Command::new("mmlsdisk");
@@ -102,12 +105,61 @@ impl FromIterator<Self> for Disks {
     }
 }
 
+/// Disk availability.
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[non_exhaustive]
+pub enum Availability {
+    /// Disk is available for I/O operations.
+    Up,
+
+    /// No I/O operations can be performed.
+    Down,
+
+    /// Intermediate state for disks coming up.
+    Recovering,
+
+    /// Disk was not successfully brought up.
+    Unrecovered,
+
+    /// Unknown state.
+    Unknown(String),
+}
+
+impl Display for Availability {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::Up => "up",
+            Self::Down => "down",
+            Self::Recovering => "recovering",
+            Self::Unrecovered => "unrecovered",
+            Self::Unknown(s) => s.as_str(),
+        };
+
+        write!(f, "{s}")
+    }
+}
+
+impl FromStr for Availability {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "up" => Ok(Self::Up),
+            "down" => Ok(Self::Down),
+            "recovering" => Ok(Self::Recovering),
+            "unrecovered" => Ok(Self::Unrecovered),
+            unknown => Ok(Self::Unknown(unknown.into())),
+        }
+    }
+}
+
 /// Disk data.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Disk {
     nsd_name: String,
     is_metadata: bool,
     is_objectdata: bool,
+    availability: Availability,
     storage_pool: String,
 }
 
@@ -159,6 +211,12 @@ impl Disk {
         let is_objectdata =
             tokens[is_objectdata_index].parse::<MMBool>()?.as_bool();
 
+        let availability_index = index
+            .availability
+            .ok_or_else(|| anyhow!("no availability index"))?;
+        let availability =
+            tokens[availability_index].parse::<Availability>()?;
+
         let storage_pool_index = index
             .storage_pool
             .ok_or_else(|| anyhow!("no storage pool index"))?;
@@ -168,6 +226,7 @@ impl Disk {
             nsd_name,
             is_metadata,
             is_objectdata,
+            availability,
             storage_pool,
         })
     }
@@ -178,6 +237,7 @@ struct Index {
     nsd_name: Option<usize>,
     is_metadata: Option<usize>,
     is_objectdata: Option<usize>,
+    availability: Option<usize>,
     storage_pool: Option<usize>,
 }
 
@@ -187,9 +247,47 @@ fn header_to_index(tokens: &[&str], index: &mut Index) {
             "nsdName" => index.nsd_name = Some(i),
             "metadata" => index.is_metadata = Some(i),
             "data" => index.is_objectdata = Some(i),
+            "availability" => index.availability = Some(i),
             "storagePool" => index.storage_pool = Some(i),
             _ => {}
         }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// prometheus
+// ----------------------------------------------------------------------------
+
+impl<S: ::std::hash::BuildHasher> crate::prom::ToText
+    for HashMap<String, Disks, S>
+{
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        for (fs, disks) in self {
+            writeln!(
+                output,
+                "# HELP gpfs_disk_availability GPFS disk availability."
+            )?;
+            writeln!(output, "# TYPE gpfs_disk_availability gauge")?;
+
+            for disk in &disks.0 {
+                let status = match disk.availability {
+                    Availability::Up => 0,
+                    _ => 1,
+                };
+
+                writeln!(
+                output,
+                "gpfs_disk_availability{{name=\"{}\",fs=\"{}\",pool=\"{}\",availability=\"{}\"}} {}",
+                disk.nsd_name,
+                fs,
+                disk.storage_pool,
+                disk.availability,
+                status,
+            )?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -200,44 +298,77 @@ fn header_to_index(tokens: &[&str], index: &mut Index) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::prom::ToText;
 
     #[test]
     fn parse() {
         let input = include_str!("disk-example.in");
 
-        let fs = Disks::from_reader(input.as_bytes()).unwrap();
-        let mut fs = fs.0.into_iter();
+        let disks = Disks::from_reader(input.as_bytes()).unwrap();
+        let mut disks = disks.0.into_iter();
 
         assert_eq!(
-            fs.next(),
+            disks.next(),
             Some(Disk {
                 nsd_name: "disk1".into(),
                 is_metadata: true,
                 is_objectdata: false,
+                availability: Availability::Up,
                 storage_pool: "system".into(),
             })
         );
 
         assert_eq!(
-            fs.next(),
+            disks.next(),
             Some(Disk {
                 nsd_name: "disk2".into(),
                 is_metadata: false,
                 is_objectdata: true,
+                availability: Availability::Down,
                 storage_pool: "nvme".into(),
             })
         );
 
         assert_eq!(
-            fs.next(),
+            disks.next(),
             Some(Disk {
                 nsd_name: "disk3".into(),
                 is_metadata: false,
                 is_objectdata: true,
+                availability: Availability::Recovering,
                 storage_pool: "nlsas".into(),
             })
         );
 
-        assert_eq!(fs.next(), None);
+        assert_eq!(
+            disks.next(),
+            Some(Disk {
+                nsd_name: "disk4".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Unrecovered,
+                storage_pool: "nlsas".into(),
+            })
+        );
+
+        assert_eq!(disks.next(), None);
+    }
+
+    #[test]
+    fn prometheus() {
+        let input = include_str!("disk-example.in");
+
+        let disks = Disks::from_reader(input.as_bytes()).unwrap();
+
+        let mut all_disks = HashMap::new();
+        all_disks.insert(String::from("gpfs1"), disks);
+
+        let mut output = vec![];
+        all_disks.to_prom(&mut output).unwrap();
+
+        let metrics = std::str::from_utf8(output.as_slice()).unwrap();
+
+        let expected = include_str!("disk-example.prom");
+        assert_eq!(metrics, expected);
     }
 }

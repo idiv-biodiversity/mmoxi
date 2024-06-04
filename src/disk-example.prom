@@ -1,0 +1,6 @@
+# HELP gpfs_disk_availability GPFS disk availability.
+# TYPE gpfs_disk_availability gauge
+gpfs_disk_availability{name="disk1",fs="gpfs1",pool="system",availability="up"} 0
+gpfs_disk_availability{name="disk2",fs="gpfs1",pool="nvme",availability="down"} 1
+gpfs_disk_availability{name="disk3",fs="gpfs1",pool="nlsas",availability="recovering"} 1
+gpfs_disk_availability{name="disk4",fs="gpfs1",pool="nlsas",availability="unrecovered"} 1

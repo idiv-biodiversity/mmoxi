@@ -10,6 +10,17 @@ use crate::fileset::Fileset;
 use crate::nsd::FsPoolId;
 use crate::sysfs;
 
+/// Convert `Data` to Prometheus metrics.
+pub trait ToText {
+    /// Converts the `Data` to Prometheus' text-based format.
+    ///
+    /// # Errors
+    ///
+    /// This function uses [`writeln`] to write to `output`. It can only fail
+    /// if any of these [`writeln`] fails.
+    fn to_prom(&self, output: &mut impl Write) -> Result<()>;
+}
+
 /// Writes the `mmdf` NSD data as prometheus metrics to `output`.
 ///
 /// # Errors

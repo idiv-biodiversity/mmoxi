@@ -29,6 +29,7 @@ Notable exceptions to parsing in the library and listing in tooling are:
 
 1.  Prometheus metrics for:
 
+    - disk availability
     - disk pool size
     - disk pool group I/O
     - quotas

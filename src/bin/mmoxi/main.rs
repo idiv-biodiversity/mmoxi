@@ -8,6 +8,7 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use clap::ArgMatches;
+use mmoxi::prom::ToText;
 
 mod cli;
 
@@ -57,6 +58,7 @@ fn dispatch_list_manager(args: &ArgMatches) -> Result<()> {
 fn dispatch_prom(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
         Some(("df", args)) => run_prom_df(args),
+        Some(("disk", args)) => run_prom_disk(args),
         Some(("fileset", args)) => run_prom_fileset(args),
         Some(("pool", args)) => dispatch_prom_pool(args),
         Some(("quota", args)) => run_prom_quota(args),
@@ -225,6 +227,21 @@ fn run_prom_df(args: &ArgMatches) -> Result<()> {
     mmoxi::prom::write_df_nsd_metrics(&all_nsds, &mut output)?;
     mmoxi::prom::write_df_pool_metrics(&all_pools, &mut output)?;
     mmoxi::prom::write_df_total_metrics(&all_totals, &mut output)?;
+
+    Ok(())
+}
+
+fn run_prom_disk(args: &ArgMatches) -> Result<()> {
+    let mut output = output_to_bufwriter(args)?;
+
+    let mut all_disks = HashMap::new();
+
+    for fs in mmoxi::fs::names()? {
+        let disks = mmoxi::disk::disks(&fs)?;
+        all_disks.insert(fs, disks);
+    }
+
+    all_disks.to_prom(&mut output)?;
 
     Ok(())
 }
