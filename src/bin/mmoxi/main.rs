@@ -241,7 +241,9 @@ fn run_prom_disk(args: &ArgMatches) -> Result<()> {
         all_disks.insert(fs, disks);
     }
 
-    all_disks.to_prom(&mut output)?;
+    all_disks
+        .to_prom(&mut output)
+        .context("converting internal data to prometheus")?;
 
     Ok(())
 }
