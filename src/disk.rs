@@ -356,12 +356,39 @@ mod tests {
 
     #[test]
     fn prometheus() {
-        let input = include_str!("disk-example.in");
-
-        let disks = Disks::from_reader(input.as_bytes()).unwrap();
+        let disks = vec![
+            Disk {
+                nsd_name: "disk1".into(),
+                is_metadata: true,
+                is_objectdata: false,
+                availability: Availability::Up,
+                storage_pool: "system".into(),
+            },
+            Disk {
+                nsd_name: "disk2".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Down,
+                storage_pool: "nvme".into(),
+            },
+            Disk {
+                nsd_name: "disk3".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Recovering,
+                storage_pool: "nlsas".into(),
+            },
+            Disk {
+                nsd_name: "disk4".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Unrecovered,
+                storage_pool: "nlsas".into(),
+            },
+        ];
 
         let mut all_disks = HashMap::new();
-        all_disks.insert(String::from("gpfs1"), disks);
+        all_disks.insert(String::from("gpfs1"), Disks(disks));
 
         let mut output = vec![];
         all_disks.to_prom(&mut output).unwrap();
