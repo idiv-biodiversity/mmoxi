@@ -1,18 +1,49 @@
 //! `mmdf` parsing.
 
-use std::io::BufRead;
+use std::collections::HashMap;
+use std::hash::BuildHasher;
+use std::io::{BufRead, Write};
 use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 
+use crate::prom::ToText;
 use crate::util::MMBool;
 
-/// Runs `mmdf` on the given file system.
+/// Runs `mmdf` on all file systems.
 ///
 /// # Errors
 ///
-/// Returns an error if running `mmdf` fails or if parsing its output fails.
-pub fn run(fs: &str) -> Result<Data> {
+/// Returns an error if running any `mm*` command fails, if parsing their
+/// output fails, or if writing to `output` fails.
+pub fn run() -> Result<Data> {
+    let mut all_nsds: HashMap<String, Vec<Nsd>> = HashMap::default();
+    let mut all_pools: HashMap<String, Vec<Pool>> = HashMap::default();
+    let mut all_totals: HashMap<String, Filesystem> = HashMap::default();
+
+    for fs in crate::fs::names()? {
+        let FsSummary {
+            fs,
+            nsds,
+            pools,
+            total,
+        } = run_one(&fs)?;
+
+        all_nsds.insert(fs.clone(), nsds);
+        all_pools.insert(fs.clone(), pools);
+        all_totals.insert(fs, total);
+    }
+
+    let data = Data {
+        all_nsds,
+        all_pools,
+        all_totals,
+    };
+
+    Ok(data)
+}
+
+fn run_one(fs: &str) -> Result<FsSummary> {
     let mut cmd = Command::new("mmdf");
     cmd.arg(fs);
     cmd.arg("-Y");
@@ -21,28 +52,36 @@ pub fn run(fs: &str) -> Result<Data> {
         .output()
         .with_context(|| format!("error running: {cmd:?}"))?;
 
-    let data = Data::from_reader(fs, output.stdout.as_slice())?;
+    let data = FsSummary::from_reader(fs, output.stdout.as_slice())?;
 
     Ok(data)
 }
 
-/// The data returned by `mmdf`.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+/// Summed up data.
 pub struct Data {
-    /// Returns the file system name.
-    pub fs: String,
-
-    /// Returns the NSDs.
-    pub nsds: Vec<Nsd>,
-
-    /// Returns the per pool totals.
-    pub pools: Vec<Pool>,
-
-    /// Returns the file system totals.
-    pub total: Filesystem,
+    all_nsds: HashMap<String, Vec<Nsd>>,
+    all_pools: HashMap<String, Vec<Pool>>,
+    all_totals: HashMap<String, Filesystem>,
 }
 
-impl Data {
+impl ToText for Data {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        self.all_nsds.to_prom(output)?;
+        self.all_pools.to_prom(output)?;
+        self.all_totals.to_prom(output)?;
+
+        Ok(())
+    }
+}
+
+struct FsSummary {
+    fs: String,
+    nsds: Vec<Nsd>,
+    pools: Vec<Pool>,
+    total: Filesystem,
+}
+
+impl FsSummary {
     fn new(fs: impl Into<String>) -> Self {
         Self {
             fs: fs.into(),
@@ -53,11 +92,8 @@ impl Data {
     }
 }
 
-/// A filesystem total entry.
-#[derive(
-    Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default,
-)]
-pub struct Filesystem {
+#[derive(Debug, Default, PartialEq)]
+struct Filesystem {
     size: u64,
     free_blocks: u64,
     free_blocks_percent: u64,
@@ -65,41 +101,88 @@ pub struct Filesystem {
     free_fragments_percent: u64,
 }
 
-impl Filesystem {
-    /// Returns the NSD size in kilobytes.
-    #[must_use]
-    pub const fn size(&self) -> u64 {
-        self.size
-    }
+impl<S: BuildHasher> ToText for HashMap<String, Filesystem, S> {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        writeln!(
+            output,
+            "# HELP gpfs_df_fs_size GPFS mmdf pool size in kilobytes"
+        )?;
+        writeln!(output, "# TYPE gpfs_df_fs_size gauge")?;
 
-    /// Returns the free blocks in kilobytes.
-    #[must_use]
-    pub const fn free_blocks(&self) -> u64 {
-        self.free_blocks
-    }
+        for (fs_name, fs) in self {
+            writeln!(
+                output,
+                "gpfs_df_fs_size{{name=\"{fs_name}\"}} {}",
+                fs.size,
+            )?;
+        }
 
-    /// Returns the free blocks in percent.
-    #[must_use]
-    pub const fn free_blocks_percent(&self) -> u64 {
-        self.free_blocks_percent
-    }
+        writeln!(
+            output,
+            "# HELP gpfs_df_fs_free_blocks GPFS mmdf pool free blocks in kilobytes"
+        )?;
 
-    /// Returns the free fragments in kilobytes.
-    #[must_use]
-    pub const fn free_fragments(&self) -> u64 {
-        self.free_fragments
-    }
+        writeln!(output, "# TYPE gpfs_df_fs_free_blocks gauge")?;
 
-    /// Returns the free fragments in percent.
-    #[must_use]
-    pub const fn free_fragments_percent(&self) -> u64 {
-        self.free_fragments_percent
+        for (fs_name, fs) in self {
+            writeln!(
+                output,
+                "gpfs_df_fs_free_blocks{{name=\"{fs_name}\"}} {}",
+                fs.free_blocks,
+            )?;
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_fs_free_blocks_percent GPFS mmdf pool free blocks percent"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_fs_free_blocks_percent gauge")?;
+
+        for (fs_name, fs) in self {
+            writeln!(
+                output,
+                "gpfs_df_fs_free_blocks_percent{{name=\"{fs_name}\"}} {}",
+                fs.free_blocks_percent,
+            )?;
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_fs_free_fragments GPFS mmdf pool free fragments in kilobytes"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_fs_free_fragments gauge")?;
+
+        for (fs_name, fs) in self {
+            writeln!(
+                output,
+                "gpfs_df_fs_free_fragments{{name=\"{fs_name}\"}} {}",
+                fs.free_fragments,
+            )?;
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_fs_free_fragments_percent GPFS mmdf pool free fragments percent"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_fs_free_fragments_percent gauge")?;
+
+        for (fs_name, fs) in self {
+            writeln!(
+                output,
+                "gpfs_df_fs_free_fragments_percent{{name=\"{fs_name}\"}} {}",
+                fs.free_fragments_percent,
+            )?;
+        }
+
+        Ok(())
     }
 }
 
-/// A pool total entry.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct Pool {
+#[derive(Debug, PartialEq)]
+struct Pool {
     name: String,
     size: u64,
     free_blocks: u64,
@@ -108,111 +191,221 @@ pub struct Pool {
     free_fragments_percent: u64,
 }
 
-impl Pool {
-    /// Returns the pool name.
-    #[must_use]
-    pub fn name(&self) -> &str {
-        self.name.as_ref()
-    }
+impl<S: BuildHasher> ToText for HashMap<String, Vec<Pool>, S> {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        writeln!(
+            output,
+            "# HELP gpfs_df_pool_size GPFS mmdf pool size in kilobytes"
+        )?;
 
-    /// Returns the NSD size in kilobytes.
-    #[must_use]
-    pub const fn size(&self) -> u64 {
-        self.size
-    }
+        writeln!(output, "# TYPE gpfs_df_pool_size gauge")?;
 
-    /// Returns the free blocks in kilobytes.
-    #[must_use]
-    pub const fn free_blocks(&self) -> u64 {
-        self.free_blocks
-    }
+        for (fs, pools) in self {
+            for pool in pools {
+                writeln!(
+                    output,
+                    "gpfs_df_pool_size{{name=\"{}\",fs=\"{fs}\"}} {}",
+                    pool.name, pool.size,
+                )?;
+            }
+        }
 
-    /// Returns the free blocks in percent.
-    #[must_use]
-    pub const fn free_blocks_percent(&self) -> u64 {
-        self.free_blocks_percent
-    }
+        writeln!(
+            output,
+            "# HELP gpfs_df_pool_free_blocks GPFS mmdf pool free blocks in kilobytes"
+        )?;
 
-    /// Returns the free fragments in kilobytes.
-    #[must_use]
-    pub const fn free_fragments(&self) -> u64 {
-        self.free_fragments
-    }
+        writeln!(output, "# TYPE gpfs_df_pool_free_blocks gauge")?;
 
-    /// Returns the free fragments in percent.
-    #[must_use]
-    pub const fn free_fragments_percent(&self) -> u64 {
-        self.free_fragments_percent
+        for (fs, pools) in self {
+            for pool in pools {
+                writeln!(
+                    output,
+                    "gpfs_df_pool_free_blocks{{name=\"{}\",fs=\"{fs}\"}} {}",
+                    pool.name, pool.free_blocks,
+                )?;
+            }
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_pool_free_blocks_percent GPFS mmdf pool free blocks percent"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_pool_free_blocks_percent gauge")?;
+
+        for (fs, pools) in self {
+            for pool in pools {
+                writeln!(
+                    output,
+                    "gpfs_df_pool_free_blocks_percent{{name=\"{}\",fs=\"{fs}\"}} {}",
+                    pool.name,
+                    pool.free_blocks_percent,
+                )?;
+            }
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_pool_free_fragments GPFS mmdf pool free fragments in kilobytes"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_pool_free_fragments gauge")?;
+
+        for (fs, pools) in self {
+            for pool in pools {
+                writeln!(
+                    output,
+                    "gpfs_df_pool_free_fragments{{name=\"{}\",fs=\"{fs}\"}} {}",
+                    pool.name,
+                    pool.free_fragments,
+                )?;
+            }
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_pool_free_fragments_percent GPFS mmdf pool free fragments percent"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_pool_free_fragments_percent gauge")?;
+
+        for (fs, pools) in self {
+            for pool in pools {
+                writeln!(
+                    output,
+                    "gpfs_df_pool_free_fragments_percent{{name=\"{}\",fs=\"{fs}\"}} {}",
+                    pool.name,
+                    pool.free_fragments_percent,
+                )?;
+            }
+        }
+
+        Ok(())
     }
 }
 
-/// An NSD entry.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct Nsd {
+#[derive(Debug, PartialEq)]
+struct Nsd {
     name: String,
     pool: String,
     size: u64,
-    metadata: bool,
-    data: bool,
+    holds_metadata: bool,
+    holds_objectdata: bool,
     free_blocks: u64,
     free_blocks_percent: u64,
     free_fragments: u64,
     free_fragments_percent: u64,
 }
 
-impl Nsd {
-    /// Returns the NSD name.
-    #[must_use]
-    pub fn name(&self) -> &str {
-        self.name.as_ref()
-    }
+impl<S: BuildHasher> ToText for HashMap<String, Vec<Nsd>, S> {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        writeln!(
+            output,
+            "# HELP gpfs_df_nsd_size GPFS mmdf NSD size in kilobytes"
+        )?;
 
-    /// Returns the pool name this NSD belongs to.
-    #[must_use]
-    pub fn pool(&self) -> &str {
-        self.pool.as_ref()
-    }
+        writeln!(output, "# TYPE gpfs_df_nsd_size gauge")?;
 
-    /// Returns the NSD size in kilobytes.
-    #[must_use]
-    pub const fn size(&self) -> u64 {
-        self.size
-    }
+        for (fs, nsds) in self {
+            for nsd in nsds {
+                writeln!(
+                    output,
+                    "gpfs_df_nsd_size{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                    nsd.name,
+                    nsd.pool,
+                    nsd.holds_metadata,
+                    nsd.holds_objectdata,
+                    nsd.size,
+                )?;
+            }
+        }
 
-    /// Returns `true` if this NSD holds metadata.
-    #[must_use]
-    pub const fn holds_metadata(&self) -> bool {
-        self.metadata
-    }
+        writeln!(
+            output,
+            "# HELP gpfs_df_nsd_free_blocks GPFS mmdf NSD free blocks in kilobytes"
+        )?;
 
-    /// Returns `true` if this NSD holds object data.
-    #[must_use]
-    pub const fn holds_objectdata(&self) -> bool {
-        self.data
-    }
+        writeln!(output, "# TYPE gpfs_df_nsd_free_blocks gauge")?;
 
-    /// Returns the free blocks in kilobytes.
-    #[must_use]
-    pub const fn free_blocks(&self) -> u64 {
-        self.free_blocks
-    }
+        for (fs, nsds) in self {
+            for nsd in nsds {
+                writeln!(
+                    output,
+                    "gpfs_df_nsd_free_blocks{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                    nsd.name,
+                    nsd.pool,
+                    nsd.holds_metadata,
+                    nsd.holds_objectdata,
+                    nsd.free_blocks,
+                )?;
+            }
+        }
 
-    /// Returns the free blocks in percent.
-    #[must_use]
-    pub const fn free_blocks_percent(&self) -> u64 {
-        self.free_blocks_percent
-    }
+        writeln!(
+            output,
+            "# HELP gpfs_df_nsd_free_blocks_percent GPFS mmdf NSD free blocks percent"
+        )?;
 
-    /// Returns the free fragments in kilobytes.
-    #[must_use]
-    pub const fn free_fragments(&self) -> u64 {
-        self.free_fragments
-    }
+        writeln!(output, "# TYPE gpfs_df_nsd_free_blocks_percent gauge")?;
 
-    /// Returns the free fragments in percent.
-    #[must_use]
-    pub const fn free_fragments_percent(&self) -> u64 {
-        self.free_fragments_percent
+        for (fs, nsds) in self {
+            for nsd in nsds {
+                writeln!(
+                    output,
+                    "gpfs_df_nsd_free_blocks_percent{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                    nsd.name,
+                    nsd.pool,
+                    nsd.holds_metadata,
+                    nsd.holds_objectdata,
+                    nsd.free_blocks_percent,
+                )?;
+            }
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_nsd_free_fragments GPFS mmdf NSD free fragments in kilobytes"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_nsd_free_fragments gauge")?;
+
+        for (fs, nsds) in self {
+            for nsd in nsds {
+                writeln!(
+                    output,
+                    "gpfs_df_nsd_free_fragments{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                    nsd.name,
+                    nsd.pool,
+                    nsd.holds_metadata,
+                    nsd.holds_objectdata,
+                    nsd.free_fragments,
+                )?;
+            }
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_df_nsd_free_fragments_percent GPFS mmdf NSD free fragments percent"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_df_nsd_free_fragments_percent gauge")?;
+
+        for (fs, nsds) in self {
+            for nsd in nsds {
+                writeln!(
+                    output,
+                    "gpfs_df_nsd_free_fragments_percent{{name=\"{}\",fs=\"{fs}\",pool=\"{}\",metadata=\"{}\",data=\"{}\"}} {}",
+                    nsd.name,
+                    nsd.pool,
+                    nsd.holds_metadata,
+                    nsd.holds_objectdata,
+                    nsd.free_fragments_percent,
+                )?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -220,7 +413,7 @@ impl Nsd {
 // boiler-platy parsing
 // ----------------------------------------------------------------------------
 
-impl Data {
+impl FsSummary {
     fn from_reader<Input: BufRead>(fs: &str, input: Input) -> Result<Self> {
         let mut fs_index = FilesystemIndex::default();
         let mut nsd_index = NsdIndex::default();
@@ -261,7 +454,7 @@ impl Data {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct FilesystemIndex {
     size: Option<usize>,
     free_blocks: Option<usize>,
@@ -285,7 +478,7 @@ impl FilesystemIndex {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct NsdIndex {
     name: Option<usize>,
     pool: Option<usize>,
@@ -317,7 +510,7 @@ impl NsdIndex {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct PoolIndex {
     name: Option<usize>,
     size: Option<usize>,
@@ -470,8 +663,8 @@ impl Nsd {
             name,
             pool,
             size,
-            metadata,
-            data,
+            holds_metadata: metadata,
+            holds_objectdata: data,
             free_blocks,
             free_blocks_percent,
             free_fragments,
@@ -552,12 +745,12 @@ mod tests {
     fn parse() {
         let input = include_str!("df-example.in");
 
-        let Data {
+        let FsSummary {
             fs: _,
             nsds,
             pools,
             total,
-        } = Data::from_reader("gpfs1", input.as_bytes()).unwrap();
+        } = FsSummary::from_reader("gpfs1", input.as_bytes()).unwrap();
 
         let mut nsds = nsds.into_iter();
 
@@ -567,8 +760,8 @@ mod tests {
                 name: "filer3_nvme02".into(),
                 pool: "nvme".into(),
                 size: 6_251_223_376,
-                metadata: false,
-                data: true,
+                holds_metadata: false,
+                holds_objectdata: true,
                 free_blocks: 2_703_523_840,
                 free_blocks_percent: 43,
                 free_fragments: 621_356_336,
@@ -582,8 +775,8 @@ mod tests {
                 name: "filer3_nvme03".into(),
                 pool: "nvme".into(),
                 size: 6_251_223_376,
-                metadata: false,
-                data: true,
+                holds_metadata: false,
+                holds_objectdata: true,
                 free_blocks: 2_696_495_104,
                 free_blocks_percent: 43,
                 free_fragments: 621_595_888,
@@ -597,8 +790,8 @@ mod tests {
                 name: "filer3_nvme04".into(),
                 pool: "nvme".into(),
                 size: 6_251_223_376,
-                metadata: false,
-                data: true,
+                holds_metadata: false,
+                holds_objectdata: true,
                 free_blocks: 2_703_433_728,
                 free_blocks_percent: 43,
                 free_fragments: 618_577_952,

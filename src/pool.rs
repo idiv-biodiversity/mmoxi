@@ -224,82 +224,76 @@ fn parse_mmlspool_output(s: &str) -> Result<Vec<Pool>> {
     Ok(pools)
 }
 
-/// Converts filesystems to prometheus metric format.
-///
-/// # Errors
-///
-/// This function uses [`writeln`] to write to `output`. It can only fail if
-/// any of these [`writeln`] fails.
-pub fn to_prom<Output: Write>(
-    filesystems: &[Filesystem],
-    output: &mut Output,
-) -> Result<()> {
-    writeln!(
-        output,
-        "# HELP gpfs_fs_pool_total_kbytes GPFS pool size in kilobytes."
-    )?;
-    writeln!(output, "# TYPE gpfs_fs_pool_total_kbytes gauge")?;
+impl crate::prom::ToText for Vec<Filesystem> {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        writeln!(
+            output,
+            "# HELP gpfs_fs_pool_total_kbytes GPFS pool size in kilobytes."
+        )?;
+        writeln!(output, "# TYPE gpfs_fs_pool_total_kbytes gauge")?;
 
-    for fs in filesystems {
-        for pool in &fs.pools {
-            if let Some(size) = &pool.data {
-                writeln!(
+        for fs in self {
+            for pool in &fs.pools {
+                if let Some(size) = &pool.data {
+                    writeln!(
                     output,
                     "gpfs_fs_pool_total_kbytes{{fs=\"{}\",pool=\"{}\",type=\"data\"}} {}",
                     fs.name,
                     pool.name,
                     size.total_kb
                 )?;
-            }
+                }
 
-            if let Some(size) = &pool.meta {
-                writeln!(
+                if let Some(size) = &pool.meta {
+                    writeln!(
                     output,
                     "gpfs_fs_pool_total_kbytes{{fs=\"{}\",pool=\"{}\",type=\"meta\"}} {}",
                     fs.name,
                     pool.name,
                     size.total_kb
                 )?;
+                }
             }
         }
-    }
 
-    writeln!(
-        output,
-        "# HELP gpfs_fs_pool_free_kbytes GPFS pool free kilobytes."
-    )?;
-    writeln!(output, "# TYPE gpfs_fs_pool_free_kbytes gauge")?;
+        writeln!(
+            output,
+            "# HELP gpfs_fs_pool_free_kbytes GPFS pool free kilobytes."
+        )?;
+        writeln!(output, "# TYPE gpfs_fs_pool_free_kbytes gauge")?;
 
-    for fs in filesystems {
-        for pool in &fs.pools {
-            if let Some(size) = &pool.data {
-                writeln!(
+        for fs in self {
+            for pool in &fs.pools {
+                if let Some(size) = &pool.data {
+                    writeln!(
                     output,
                     "gpfs_fs_pool_free_kbytes{{fs=\"{}\",pool=\"{}\",type=\"data\"}} {}",
                     fs.name,
                     pool.name,
                     size.free_kb
                 )?;
-            }
+                }
 
-            if let Some(size) = &pool.meta {
-                writeln!(
+                if let Some(size) = &pool.meta {
+                    writeln!(
                     output,
                     "gpfs_fs_pool_free_kbytes{{fs=\"{}\",pool=\"{}\",type=\"meta\"}} {}",
                     fs.name,
                     pool.name,
                     size.free_kb
                 )?;
+                }
             }
         }
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::prom::ToText;
 
     #[test]
     fn parse() {
@@ -395,7 +389,7 @@ mod tests {
         };
 
         let mut output = vec![];
-        to_prom(&[fs], &mut output).unwrap();
+        vec![fs].to_prom(&mut output).unwrap();
 
         let metrics = std::str::from_utf8(output.as_slice()).unwrap();
 

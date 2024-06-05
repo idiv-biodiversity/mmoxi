@@ -8,6 +8,7 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use clap::ArgMatches;
+
 use mmoxi::prom::ToText;
 
 mod cli;
@@ -173,7 +174,7 @@ fn run_prom_pool_user_distribution(args: &ArgMatches) -> Result<()> {
 
     let scope = args.get_one::<String>("scope");
 
-    let mut user_sizes = mmoxi::policy::pool_user_distribution::run(
+    let data = mmoxi::policy::pool_user_distribution::run(
         device_or_dir,
         pool,
         fileset,
@@ -183,51 +184,15 @@ fn run_prom_pool_user_distribution(args: &ArgMatches) -> Result<()> {
         scope,
     )?;
 
-    let mut named_user_sizes = HashMap::with_capacity(user_sizes.len());
-
-    for (user, data) in user_sizes.drain() {
-        let user = mmoxi::user::by_uid(&user).unwrap_or(user);
-        named_user_sizes.insert(user, data);
-    }
-
-    mmoxi::prom::write_pool_user_distribution(
-        pool,
-        &named_user_sizes,
-        &mut output,
-    )?;
+    data.to_prom(&mut output)?;
 
     Ok(())
 }
 
 fn run_prom_df(args: &ArgMatches) -> Result<()> {
     let mut output = output_to_bufwriter(args)?;
-
-    let mut all_nsds: HashMap<String, Vec<mmoxi::df::Nsd>> =
-        HashMap::default();
-
-    let mut all_pools: HashMap<String, Vec<mmoxi::df::Pool>> =
-        HashMap::default();
-
-    let mut all_totals: HashMap<String, mmoxi::df::Filesystem> =
-        HashMap::default();
-
-    for fs in mmoxi::fs::names()? {
-        let mmoxi::df::Data {
-            fs,
-            nsds,
-            pools,
-            total,
-        } = mmoxi::df::run(&fs)?;
-
-        all_nsds.insert(fs.clone(), nsds);
-        all_pools.insert(fs.clone(), pools);
-        all_totals.insert(fs, total);
-    }
-
-    mmoxi::prom::write_df_nsd_metrics(&all_nsds, &mut output)?;
-    mmoxi::prom::write_df_pool_metrics(&all_pools, &mut output)?;
-    mmoxi::prom::write_df_total_metrics(&all_totals, &mut output)?;
-
+    let data = mmoxi::df::run()?;
+    data.to_prom(&mut output)?;
     Ok(())
 }
 
@@ -283,7 +248,8 @@ fn run_prom_pool_usage(args: &ArgMatches) -> Result<()> {
 
     let filesystems = mmoxi::pool::run_all(&names)?;
 
-    mmoxi::pool::to_prom(&filesystems, &mut output)
+    filesystems
+        .to_prom(&mut output)
         .context("converting internal data to prometheus")?;
 
     Ok(())

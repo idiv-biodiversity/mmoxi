@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
 use std::ops::AddAssign;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -24,14 +24,14 @@ use tempfile::{tempdir, tempdir_in};
 /// - parsing `mmapplypolicy` output
 pub fn run(
     device_or_dir: impl AsRef<OsStr>,
-    pool: impl AsRef<str>,
+    pool: impl Into<String>,
     fileset: Option<impl AsRef<str>>,
     nodes: Option<impl AsRef<OsStr>>,
     local_work_dir: Option<impl AsRef<Path>>,
     global_work_dir: Option<impl AsRef<Path>>,
     scope: Option<impl AsRef<str>>,
-) -> Result<HashMap<String, Data>> {
-    let pool = pool.as_ref();
+) -> Result<Data> {
+    let pool = pool.into();
 
     let tmp = if let Some(ref local_work_dir) = local_work_dir {
         tempdir_in(local_work_dir)?
@@ -43,7 +43,7 @@ pub fn run(
     let prefix = tmp.path().join("pool-scanner");
 
     let mut file = File::create(&policy)?;
-    write_policy(&mut file, pool, fileset)?;
+    write_policy(&mut file, &pool, fileset)?;
     file.sync_all()?;
 
     let mut command = Command::new("mmapplypolicy");
@@ -91,16 +91,92 @@ pub fn run(
     })?;
     let list = BufReader::new(list);
 
-    let user_sizes = sum(list)?;
+    let mut raw = sum(list)?;
+    let mut named_user_sizes = HashMap::with_capacity(raw.len());
 
-    Ok(user_sizes)
+    for (user, data) in raw.drain() {
+        let user = crate::user::by_uid(&user).unwrap_or(user);
+        named_user_sizes.insert(user, data);
+    }
+
+    let data = Data {
+        pool,
+        raw: named_user_sizes,
+    };
+
+    Ok(data)
+}
+
+/// The data structure returned by this module.
+pub struct Data {
+    pool: String,
+    raw: HashMap<String, Summary>,
+}
+
+impl crate::prom::ToText for Data {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        let pool = &self.pool;
+
+        writeln!(
+            output,
+            "# HELP gpfs_pool_user_distribution_files GPFS pool files per user"
+        )?;
+
+        writeln!(output, "# TYPE gpfs_pool_user_distribution_files gauge")?;
+
+        for (user, data) in &self.raw {
+            writeln!(
+                output,
+                "gpfs_pool_user_distribution_files{{pool=\"{}\",user=\"{}\"}} {}",
+                pool, user, data.files,
+            )?;
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_pool_user_distribution_file_size GPFS pool file size per user in bytes"
+        )?;
+
+        writeln!(
+            output,
+            "# TYPE gpfs_pool_user_distribution_file_size gauge"
+        )?;
+
+        for (user, data) in &self.raw {
+            writeln!(
+                output,
+                "gpfs_pool_user_distribution_file_size{{pool=\"{}\",user=\"{}\"}} {}",
+                pool, user, data.file_size,
+            )?;
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_pool_user_distribution_allocated GPFS pool allocated storage per user in kilobytes"
+        )?;
+
+        writeln!(
+            output,
+            "# TYPE gpfs_pool_user_distribution_allocated gauge"
+        )?;
+
+        for (user, data) in &self.raw {
+            writeln!(
+                output,
+                "gpfs_pool_user_distribution_allocated{{pool=\"{}\",user=\"{}\"}} {}",
+                pool, user, data.kb_allocated,
+            )?;
+        }
+
+        Ok(())
+    }
 }
 
 /// Data collected via policy.
 #[derive(
     Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default,
 )]
-pub struct Data {
+pub struct Summary {
     /// Returns the number of files.
     pub files: u64,
 
@@ -111,7 +187,7 @@ pub struct Data {
     pub kb_allocated: u64,
 }
 
-impl AddAssign for Data {
+impl AddAssign for Summary {
     fn add_assign(&mut self, rhs: Self) {
         self.files += rhs.files;
         self.file_size += rhs.file_size;
@@ -119,11 +195,11 @@ impl AddAssign for Data {
     }
 }
 
-fn sum<I>(input: I) -> Result<HashMap<String, Data>>
+fn sum<I>(input: I) -> Result<HashMap<String, Summary>>
 where
     I: BufRead,
 {
-    let mut user_sizes: HashMap<String, Data> = HashMap::default();
+    let mut user_sizes: HashMap<String, Summary> = HashMap::default();
 
     for line in input.byte_lines() {
         let line = line?;
@@ -157,7 +233,7 @@ where
             .parse()
             .with_context(|| format!("not a number: {kb_allocated}"))?;
 
-        *user_sizes.entry(user.into()).or_default() += Data {
+        *user_sizes.entry(user.into()).or_default() += Summary {
             files: 1,
             file_size,
             kb_allocated,
@@ -224,7 +300,7 @@ mod tests {
             user_sizes.next(),
             Some((
                 "1000".into(),
-                Data {
+                Summary {
                     files: 6,
                     file_size: 322_255,
                     kb_allocated: 640,
@@ -236,7 +312,7 @@ mod tests {
             user_sizes.next(),
             Some((
                 "1001".into(),
-                Data {
+                Summary {
                     files: 6,
                     file_size: 455_067,
                     kb_allocated: 960,

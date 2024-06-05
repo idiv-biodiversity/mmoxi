@@ -5,6 +5,7 @@
 //! ```no_run
 //! use std::io::{self, BufWriter};
 //!
+//! use mmoxi::prom::ToText;
 //! use mmoxi::quota::Data;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,6 +22,8 @@ use std::io::{BufRead, Write};
 use std::str::FromStr;
 
 use anyhow::{anyhow, Context, Result};
+
+use crate::prom::ToText;
 
 /// Parsed quota entries.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
@@ -64,14 +67,10 @@ impl Data {
     pub fn entries(&self) -> &[Entry] {
         &self.entries
     }
+}
 
-    /// Writes all entries as prometheus metrics to `output`.
-    ///
-    /// # Errors
-    ///
-    /// This function uses [`writeln`] to write to `output`. It can only fail
-    /// if any of these [`writeln`] fails.
-    pub fn to_prom<Output: Write>(&self, output: &mut Output) -> Result<()> {
+impl ToText for Data {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
         if self.entries.is_empty() {
             return Ok(());
         }
