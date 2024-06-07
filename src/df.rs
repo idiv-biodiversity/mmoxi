@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 //! `mmdf` parsing.
 
 use std::io::BufRead;
