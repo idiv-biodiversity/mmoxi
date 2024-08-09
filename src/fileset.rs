@@ -1,15 +1,19 @@
 //! `mmlsfileset` parsing.
 
-use std::io::BufRead;
+use std::io::{BufRead, Write};
 use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
+
+use crate::prom::ToText;
+use crate::util::MMBool;
 
 /// A fileset.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Fileset {
     filesystem_name: String,
     fileset_name: String,
+    is_inode_space_owner: bool,
     max_inodes: u64,
     alloc_inodes: u64,
     comment: Option<String>,
@@ -28,6 +32,12 @@ impl Fileset {
         self.fileset_name.as_ref()
     }
 
+    /// Returns if this fileset is the owner of its inode space.
+    #[must_use]
+    pub const fn is_inode_space_owner(&self) -> bool {
+        self.is_inode_space_owner
+    }
+
     /// Returns the maximum number of inodes.
     #[must_use]
     pub const fn max_inodes(&self) -> u64 {
@@ -44,6 +54,44 @@ impl Fileset {
     #[must_use]
     pub const fn comment(&self) -> Option<&String> {
         self.comment.as_ref()
+    }
+}
+
+impl ToText for Vec<Fileset> {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        writeln!(
+            output,
+            "# HELP gpfs_fileset_max_inodes GPFS fileset maximum inodes"
+        )?;
+        writeln!(output, "# TYPE gpfs_fileset_max_inodes gauge")?;
+
+        for fileset in self.iter().filter(|f| f.is_inode_space_owner()) {
+            writeln!(
+                output,
+                "gpfs_fileset_max_inodes{{fs=\"{}\",fileset=\"{}\"}} {}",
+                fileset.filesystem_name(),
+                fileset.fileset_name(),
+                fileset.max_inodes(),
+            )?;
+        }
+
+        writeln!(
+            output,
+            "# HELP gpfs_fileset_alloc_inodes GPFS fileset allocated inodes"
+        )?;
+        writeln!(output, "# TYPE gpfs_fileset_alloc_inodes gauge")?;
+
+        for fileset in self.iter().filter(|f| f.is_inode_space_owner()) {
+            writeln!(
+                output,
+                "gpfs_fileset_alloc_inodes{{fs=\"{}\",fileset=\"{}\"}} {}",
+                fileset.filesystem_name(),
+                fileset.fileset_name(),
+                fileset.alloc_inodes(),
+            )?;
+        }
+
+        Ok(())
     }
 }
 
@@ -104,6 +152,7 @@ pub fn fileset(fs: &str, fileset: &str) -> Result<Fileset> {
 struct Index {
     filesystem_name: Option<usize>,
     fileset_name: Option<usize>,
+    is_inode_space_owner: Option<usize>,
     max_inodes: Option<usize>,
     alloc_inodes: Option<usize>,
     comment: Option<usize>,
@@ -141,6 +190,14 @@ fn from_tokens(tokens: &[&str], index: &Index) -> Result<Fileset> {
         .ok_or_else(|| anyhow!("no filesetName index"))?;
     let fileset_name = tokens[fileset_name_index].into();
 
+    let is_inode_space_owner_index = index
+        .is_inode_space_owner
+        .ok_or_else(|| anyhow!("no isInodeSpaceOwner index"))?;
+    let is_inode_space_owner = tokens[is_inode_space_owner_index]
+        .parse::<MMBool>()
+        .with_context(|| "parsing isInodeSpaceOwner value")?
+        .as_bool();
+
     let max_inodes_index = index
         .max_inodes
         .ok_or_else(|| anyhow!("no maxInodes index"))?;
@@ -163,6 +220,7 @@ fn from_tokens(tokens: &[&str], index: &Index) -> Result<Fileset> {
     Ok(Fileset {
         filesystem_name,
         fileset_name,
+        is_inode_space_owner,
         max_inodes,
         alloc_inodes,
         comment,
@@ -174,6 +232,7 @@ fn header_to_index(tokens: &[&str], index: &mut Index) {
         match *token {
             "filesystemName" => index.filesystem_name = Some(i),
             "filesetName" => index.fileset_name = Some(i),
+            "isInodeSpaceOwner" => index.is_inode_space_owner = Some(i),
             "maxInodes" => index.max_inodes = Some(i),
             "allocInodes" => index.alloc_inodes = Some(i),
             "comment" => index.comment = Some(i),
@@ -202,6 +261,7 @@ mod tests {
             Some(Fileset {
                 filesystem_name: "gpfs1".into(),
                 fileset_name: "public".into(),
+                is_inode_space_owner: true,
                 max_inodes: 20_971_520,
                 alloc_inodes: 5_251_072,
                 comment: None,
@@ -213,6 +273,7 @@ mod tests {
             Some(Fileset {
                 filesystem_name: "gpfs1".into(),
                 fileset_name: "work".into(),
+                is_inode_space_owner: true,
                 max_inodes: 295_313_408,
                 alloc_inodes: 260_063_232,
                 comment: None,
@@ -224,9 +285,34 @@ mod tests {
             Some(Fileset {
                 filesystem_name: "gpfs1".into(),
                 fileset_name: "data_foo".into(),
+                is_inode_space_owner: true,
                 max_inodes: 20_000_768,
                 alloc_inodes: 1_032_192,
                 comment: Some("end of project: 2026-11".into()),
+            })
+        );
+
+        assert_eq!(
+            filesets.next(),
+            Some(Fileset {
+                filesystem_name: "gpfs1".into(),
+                fileset_name: "data_db".into(),
+                is_inode_space_owner: true,
+                max_inodes: 20_971_520,
+                alloc_inodes: 5_251_072,
+                comment: Some("end of project: 2042-12".into()),
+            })
+        );
+
+        assert_eq!(
+            filesets.next(),
+            Some(Fileset {
+                filesystem_name: "gpfs1".into(),
+                fileset_name: "data_db_foo".into(),
+                is_inode_space_owner: false,
+                max_inodes: 0,
+                alloc_inodes: 0,
+                comment: Some("end of project: 2030-12".into()),
             })
         );
 

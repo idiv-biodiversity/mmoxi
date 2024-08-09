@@ -6,7 +6,6 @@ use std::path::Path;
 
 use anyhow::{anyhow, Result};
 
-use crate::fileset::Fileset;
 use crate::nsd::FsPoolId;
 use crate::sysfs;
 
@@ -19,54 +18,6 @@ pub trait ToText {
     /// This function uses [`writeln`] to write to `output`. It can only fail
     /// if any of these [`writeln`] fails.
     fn to_prom(&self, output: &mut impl Write) -> Result<()>;
-}
-
-/// Writes the filesets' information as prometheus metrics to `output`.
-///
-/// # Errors
-///
-/// This function uses [`writeln`] to write to `output`. It can only fail if
-/// any of these [`writeln`] fails.
-pub fn write_fileset_metrics<O>(
-    filesets: &[Fileset],
-    output: &mut O,
-) -> Result<()>
-where
-    O: Write,
-{
-    writeln!(
-        output,
-        "# HELP gpfs_fileset_max_inodes GPFS fileset maximum inodes"
-    )?;
-    writeln!(output, "# TYPE gpfs_fileset_max_inodes gauge")?;
-
-    for fileset in filesets {
-        writeln!(
-            output,
-            "gpfs_fileset_max_inodes{{fs=\"{}\",fileset=\"{}\"}} {}",
-            fileset.filesystem_name(),
-            fileset.fileset_name(),
-            fileset.max_inodes(),
-        )?;
-    }
-
-    writeln!(
-        output,
-        "# HELP gpfs_fileset_alloc_inodes GPFS fileset allocated inodes"
-    )?;
-    writeln!(output, "# TYPE gpfs_fileset_alloc_inodes gauge")?;
-
-    for fileset in filesets {
-        writeln!(
-            output,
-            "gpfs_fileset_alloc_inodes{{fs=\"{}\",fileset=\"{}\"}} {}",
-            fileset.filesystem_name(),
-            fileset.fileset_name(),
-            fileset.alloc_inodes(),
-        )?;
-    }
-
-    Ok(())
 }
 
 /// Returns block device metrics grouped by pool.

@@ -222,7 +222,7 @@ fn run_prom_fileset(args: &ArgMatches) -> Result<()> {
         filesets.extend(mmoxi::fileset::filesets(&fs)?);
     }
 
-    mmoxi::prom::write_fileset_metrics(&filesets, &mut output)?;
+    filesets.to_prom(&mut output)?;
 
     Ok(())
 }

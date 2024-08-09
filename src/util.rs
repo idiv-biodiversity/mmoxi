@@ -30,8 +30,8 @@ impl FromStr for MMBool {
 
     fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
-            "no" => Ok(Self::No),
-            "yes" => Ok(Self::Yes),
+            "no" | "0" => Ok(Self::No),
+            "yes" | "1" => Ok(Self::Yes),
             unknown => Err(anyhow!("unknown boolean value: {unknown}")),
         }
     }
