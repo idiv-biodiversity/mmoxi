@@ -1,4 +1,4 @@
-//! Spectrum Scale library for tools.
+//! Storage Scale (formerly Spectrum Scale, formerly GPFS) library for tools.
 
 #![forbid(unsafe_code)]
 #![deny(clippy::all, missing_docs)]

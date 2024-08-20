@@ -1,8 +1,8 @@
 mmoxi
 =====
 
-A [Rust][] library and collection of tools for [IBM Spectrum Scale][] (formerly
-GPFS) file systems.
+A [Rust][] library and collection of tools for [IBM Storage Scale][] (formerly
+Spectrum Scale, formerly GPFS) file systems.
 
 
 Motivation
@@ -61,7 +61,7 @@ install -Dm755 target/release/mmoxi ~/bin/mmoxi
 ```
 
 
-[IBM Spectrum Scale]: https://www.ibm.com/products/spectrum-scale
+[IBM Storage Scale]: https://www.ibm.com/products/storage-scale
 [Rust]: https://www.rust-lang.org/
 [nmon]: https://nmon.sourceforge.net/
 [docs]: https://docs.rs/mmoxi

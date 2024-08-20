@@ -2,13 +2,13 @@
 name = "mmoxi"
 version = "0.3.1"
 authors = ["Christian Krause <christian.krause@idiv.org>"]
-description = "spectrum scale tools"
+description = "tools for IBM Storage Scale file systems"
 license = "GPL-3.0-or-later"
 readme = "README.md"
 documentation = "https://docs.rs/mmoxi"
 homepage = "https://github.com/idiv-biodiversity/mmoxi"
 repository = "https://github.com/idiv-biodiversity/mmoxi"
-keywords = ["gpfs", "prometheus", "spectrum-scale"]
+keywords = ["gpfs", "prometheus", "spectrum-scale", "storage-scale"]
 categories = ["command-line-utilities", "filesystem"]
 edition = "2021"
 rust-version = "1.74"
