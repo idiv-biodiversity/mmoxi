@@ -57,15 +57,15 @@ pub fn run(
 
     if let Some(nodes) = nodes {
         command.arg("-N").arg(nodes.as_ref());
-    };
+    }
 
     if let Some(local_work_dir) = local_work_dir {
         command.arg("-s").arg(local_work_dir.as_ref());
-    };
+    }
 
     if let Some(global_work_dir) = global_work_dir {
         command.arg("-g").arg(global_work_dir.as_ref());
-    };
+    }
 
     if let Some(scope) = scope {
         command.arg("--scope").arg(scope.as_ref());
