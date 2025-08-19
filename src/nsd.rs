@@ -231,7 +231,7 @@ impl Nsds {
     }
 
     /// Returns an [`Iterator`] over the NSDs.
-    pub fn iter(&self) -> std::slice::Iter<Nsd> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Nsd> {
         self.0.iter()
     }
 
@@ -293,7 +293,7 @@ impl Nsd {
     ///
     /// Returns an error if [`Path`] can't determine the file name for the
     /// device path.
-    pub fn device_name(&self) -> Result<Cow<str>> {
+    pub fn device_name(&self) -> Result<Cow<'_, str>> {
         Path::new(&self.device)
             .file_name()
             .ok_or_else(|| {

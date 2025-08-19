@@ -56,7 +56,7 @@ impl Disks {
     }
 
     /// Returns an [`Iterator`] over the disks.
-    pub fn iter(&self) -> std::slice::Iter<Disk> {
+    pub fn iter(&self) -> std::slice::Iter<'_, Disk> {
         self.0.iter()
     }
 
