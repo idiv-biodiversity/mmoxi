@@ -87,11 +87,13 @@ fn dispatch_prom_pool(args: &ArgMatches) -> Result<()> {
 fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
     let force = args.contains_id("force");
 
-    // UNWRAP has default
-    let device_cache = args.get_one::<PathBuf>("device-cache").unwrap();
+    let device_cache = args
+        .get_one::<PathBuf>("device-cache")
+        .expect("device-cache has a default value");
 
-    // UNWRAP has default
-    let output = args.get_one::<PathBuf>("output").unwrap();
+    let output = args
+        .get_one::<PathBuf>("output")
+        .expect("output has a default value");
 
     let output = File::create(output).with_context(|| {
         format!("creating output file: {}", output.display())
@@ -105,8 +107,9 @@ fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
 fn run_cache_nsds(args: &ArgMatches) -> Result<()> {
     let force = args.contains_id("force");
 
-    // UNWRAP has default
-    let output = args.get_one::<PathBuf>("output").unwrap();
+    let output = args
+        .get_one::<PathBuf>("output")
+        .expect("output has a default value");
 
     let _nsds = mmoxi::nsd::local_cached(output, force)?;
 
@@ -134,12 +137,13 @@ fn run_list_mgr_cluster() -> Result<()> {
 fn run_pool_percent(args: &ArgMatches) -> Result<()> {
     let filesystem = args
         .get_one::<String>("filesystem")
-        .context("no filesystem argument")?;
+        .expect("filesystem is a required argument");
 
     let filesystem = mmoxi::pool::run(filesystem)?;
 
-    let pool_arg =
-        args.get_one::<String>("pool").context("no pool argument")?;
+    let pool_arg = args
+        .get_one::<String>("pool")
+        .expect("pool is a required argument");
 
     let pool = filesystem
         .pools()
@@ -161,9 +165,11 @@ fn run_prom_pool_user_distribution(args: &ArgMatches) -> Result<()> {
 
     let device_or_dir = args
         .get_one::<String>("device-or-dir")
-        .context("device or directory is required")?;
+        .expect("device-or-dir is a required argument");
 
-    let pool = args.get_one::<String>("pool").context("pool is required")?;
+    let pool = args
+        .get_one::<String>("pool")
+        .expect("pool is a required argument");
 
     let fileset = args.get_one::<String>("fileset");
 
@@ -230,8 +236,9 @@ fn run_prom_fileset(args: &ArgMatches) -> Result<()> {
 fn run_prom_pool_block(args: &ArgMatches) -> Result<()> {
     let mut output = output_to_bufwriter(args)?;
 
-    // UNWRAP has default
-    let device_cache = args.get_one::<PathBuf>("device-cache").unwrap();
+    let device_cache = args
+        .get_one::<PathBuf>("device-cache")
+        .expect("device-cache has a default value");
 
     let force = args.contains_id("force");
 
