@@ -21,6 +21,7 @@ fn main() -> Result<()> {
         Some(("list", args)) => dispatch_list(args),
         Some(("pool-percent", args)) => run_pool_percent(args),
         Some(("prometheus", args)) => dispatch_prom(args),
+        Some(("show", args)) => dispatch_show(args),
 
         _ => Err(anyhow!("subcommand is required")),
     }
@@ -42,15 +43,6 @@ fn dispatch_cache(args: &ArgMatches) -> Result<()> {
 fn dispatch_list(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
         Some(("filesystems", _args)) => run_list_filesystems(),
-        Some(("manager", args)) => dispatch_list_manager(args),
-
-        _ => Err(anyhow!("subcommand is required")),
-    }
-}
-
-fn dispatch_list_manager(args: &ArgMatches) -> Result<()> {
-    match args.subcommand() {
-        Some(("cluster", _args)) => run_list_mgr_cluster(),
 
         _ => Err(anyhow!("subcommand is required")),
     }
@@ -75,6 +67,23 @@ fn dispatch_prom_pool(args: &ArgMatches) -> Result<()> {
         Some(("user-distribution", args)) => {
             run_prom_pool_user_distribution(args)
         }
+
+        _ => Err(anyhow!("subcommand is required")),
+    }
+}
+
+fn dispatch_show(args: &ArgMatches) -> Result<()> {
+    match args.subcommand() {
+        Some(("manager", args)) => dispatch_show_manager(args),
+
+        _ => Err(anyhow!("subcommand is required")),
+    }
+}
+
+fn dispatch_show_manager(args: &ArgMatches) -> Result<()> {
+    match args.subcommand() {
+        Some(("cluster", _args)) => run_show_cluster_manager(),
+        Some(("filesystem", args)) => run_show_filesystem_manager(args),
 
         _ => Err(anyhow!("subcommand is required")),
     }
@@ -122,14 +131,6 @@ fn run_list_filesystems() -> Result<()> {
     for name in names {
         println!("{name}");
     }
-
-    Ok(())
-}
-
-fn run_list_mgr_cluster() -> Result<()> {
-    let managers = mmoxi::mgr::get()?;
-
-    println!("{}", managers.cluster().name());
 
     Ok(())
 }
@@ -267,6 +268,34 @@ fn run_prom_quota(args: &ArgMatches) -> Result<()> {
 
     let data = mmoxi::quota::Data::from_reader(io::stdin().lock())?;
     data.to_prom(&mut output)?;
+
+    Ok(())
+}
+
+fn run_show_cluster_manager() -> Result<()> {
+    let managers = mmoxi::mgr::get()?;
+
+    println!("{}", managers.cluster().name());
+
+    Ok(())
+}
+
+fn run_show_filesystem_manager(args: &ArgMatches) -> Result<()> {
+    let filesystem_name = args
+        .get_one::<String>("filesystem")
+        .expect("filesystem is a required argument");
+
+    let managers = mmoxi::mgr::get()?;
+
+    let Some(manager) = managers
+        .fs()
+        .iter()
+        .find(|fs_man| fs_man.fs() == filesystem_name)
+    else {
+        return Err(anyhow!("filesystem not found in manager list"));
+    };
+
+    println!("{}", manager.name());
 
     Ok(())
 }

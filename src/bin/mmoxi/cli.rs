@@ -28,6 +28,7 @@ pub fn build() -> Command {
         .subcommand(build_list())
         .subcommand(pool_percent)
         .subcommand(build_prometheus())
+        .subcommand(build_show())
 }
 
 fn build_cache() -> Command {
@@ -69,25 +70,11 @@ fn build_cache() -> Command {
 }
 
 fn build_list() -> Command {
-    let list_fs = Command::new("filesystems")
+    let filesystems = Command::new("filesystems")
         .about("list file system names")
         .alias("fs")
         .disable_help_flag(true)
         .disable_version_flag(true);
-
-    let list_cluster_mgr = Command::new("cluster")
-        .about("list cluster manager")
-        .disable_help_flag(true)
-        .disable_version_flag(true);
-
-    let list_mgr = Command::new("manager")
-        .about("list cluster and file system managers")
-        .alias("mgr")
-        .disable_help_flag(true)
-        .disable_version_flag(true)
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .subcommand(list_cluster_mgr);
 
     Command::new("list")
         .about("list commands")
@@ -96,8 +83,7 @@ fn build_list() -> Command {
         .disable_version_flag(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(list_fs)
-        .subcommand(list_mgr)
+        .subcommand(filesystems)
 }
 
 pub fn build_prometheus() -> Command {
@@ -184,6 +170,36 @@ pub fn build_prometheus() -> Command {
         .subcommand(prom_quota)
 }
 
+fn build_show() -> Command {
+    let cluster_manager = Command::new("cluster")
+        .about("show cluster manager")
+        .disable_help_flag(true)
+        .disable_version_flag(true);
+
+    let filesystem_manager = Command::new("filesystem")
+        .about("show filesystem manager")
+        .arg(arg_filesystem())
+        .alias("fs")
+        .disable_help_flag(true)
+        .disable_version_flag(true);
+
+    let manager = Command::new("manager")
+        .about("show cluster and file system managers")
+        .aliases(["man", "mgr"])
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .subcommand_required(true)
+        .arg_required_else_help(true)
+        .subcommand(cluster_manager)
+        .subcommand(filesystem_manager);
+
+    Command::new("show")
+        .about("show commands")
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .subcommand_required(true)
+        .arg_required_else_help(true)
+        .subcommand(manager)
 // ----------------------------------------------------------------------------
 // arguments
 // ----------------------------------------------------------------------------
