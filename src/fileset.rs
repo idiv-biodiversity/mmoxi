@@ -11,8 +11,8 @@ use crate::util::MMBool;
 /// A fileset.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Fileset {
+    name: String,
     filesystem_name: String,
-    fileset_name: String,
     is_inode_space_owner: bool,
     max_inodes: u64,
     alloc_inodes: u64,
@@ -28,8 +28,8 @@ impl Fileset {
 
     /// Returns the fileset name.
     #[must_use]
-    pub fn fileset_name(&self) -> &str {
-        self.fileset_name.as_ref()
+    pub fn name(&self) -> &str {
+        self.name.as_ref()
     }
 
     /// Returns if this fileset is the owner of its inode space.
@@ -70,7 +70,7 @@ impl ToText for Vec<Fileset> {
                 output,
                 "gpfs_fileset_max_inodes{{fs=\"{}\",fileset=\"{}\"}} {}",
                 fileset.filesystem_name(),
-                fileset.fileset_name(),
+                fileset.name(),
                 fileset.max_inodes(),
             )?;
         }
@@ -86,7 +86,7 @@ impl ToText for Vec<Fileset> {
                 output,
                 "gpfs_fileset_alloc_inodes{{fs=\"{}\",fileset=\"{}\"}} {}",
                 fileset.filesystem_name(),
-                fileset.fileset_name(),
+                fileset.name(),
                 fileset.alloc_inodes(),
             )?;
         }
@@ -218,8 +218,8 @@ fn from_tokens(tokens: &[&str], index: &Index) -> Result<Fileset> {
     let comment = Some(comment).filter(|s| !s.is_empty());
 
     Ok(Fileset {
+        name: fileset_name,
         filesystem_name,
-        fileset_name,
         is_inode_space_owner,
         max_inodes,
         alloc_inodes,
@@ -259,8 +259,8 @@ mod tests {
         assert_eq!(
             filesets.next(),
             Some(Fileset {
+                name: "public".into(),
                 filesystem_name: "gpfs1".into(),
-                fileset_name: "public".into(),
                 is_inode_space_owner: true,
                 max_inodes: 20_971_520,
                 alloc_inodes: 5_251_072,
@@ -271,8 +271,8 @@ mod tests {
         assert_eq!(
             filesets.next(),
             Some(Fileset {
+                name: "work".into(),
                 filesystem_name: "gpfs1".into(),
-                fileset_name: "work".into(),
                 is_inode_space_owner: true,
                 max_inodes: 295_313_408,
                 alloc_inodes: 260_063_232,
@@ -283,8 +283,8 @@ mod tests {
         assert_eq!(
             filesets.next(),
             Some(Fileset {
+                name: "data_foo".into(),
                 filesystem_name: "gpfs1".into(),
-                fileset_name: "data_foo".into(),
                 is_inode_space_owner: true,
                 max_inodes: 20_000_768,
                 alloc_inodes: 1_032_192,
@@ -295,8 +295,8 @@ mod tests {
         assert_eq!(
             filesets.next(),
             Some(Fileset {
+                name: "data_db".into(),
                 filesystem_name: "gpfs1".into(),
-                fileset_name: "data_db".into(),
                 is_inode_space_owner: true,
                 max_inodes: 20_971_520,
                 alloc_inodes: 5_251_072,
@@ -307,8 +307,8 @@ mod tests {
         assert_eq!(
             filesets.next(),
             Some(Fileset {
+                name: "data_db_foo".into(),
                 filesystem_name: "gpfs1".into(),
-                fileset_name: "data_db_foo".into(),
                 is_inode_space_owner: false,
                 max_inodes: 0,
                 alloc_inodes: 0,

@@ -35,9 +35,9 @@ pub fn run() -> Result<Data> {
     }
 
     let data = Data {
-        all_nsds,
-        all_pools,
-        all_totals,
+        nsds: all_nsds,
+        pools: all_pools,
+        totals: all_totals,
     };
 
     Ok(data)
@@ -59,16 +59,16 @@ fn run_one(fs: &str) -> Result<FsSummary> {
 
 /// Summed up data.
 pub struct Data {
-    all_nsds: HashMap<String, Vec<Nsd>>,
-    all_pools: HashMap<String, Vec<Pool>>,
-    all_totals: HashMap<String, Filesystem>,
+    nsds: HashMap<String, Vec<Nsd>>,
+    pools: HashMap<String, Vec<Pool>>,
+    totals: HashMap<String, Filesystem>,
 }
 
 impl ToText for Data {
     fn to_prom(&self, output: &mut impl Write) -> Result<()> {
-        self.all_nsds.to_prom(output)?;
-        self.all_pools.to_prom(output)?;
-        self.all_totals.to_prom(output)?;
+        self.nsds.to_prom(output)?;
+        self.pools.to_prom(output)?;
+        self.totals.to_prom(output)?;
 
         Ok(())
     }
