@@ -10,13 +10,11 @@ pub fn args() -> ArgMatches {
 }
 
 pub fn build() -> Command {
-    let fs = Arg::new("filesystem").required(true).help("file system");
-
     let pool_percent = Command::new("pool-percent")
         .about("show pool used in percent")
         .disable_help_flag(true)
         .disable_version_flag(true)
-        .arg(fs)
+        .arg(arg_filesystem())
         .arg(arg_pool());
 
     Command::new(crate_name!())
@@ -196,6 +194,15 @@ fn arg_device_cache() -> Arg {
         .default_value(mmoxi::nsd::DEFAULT_LOCAL_DEVICE_CACHE)
         .help("local NSD block device cache")
         .long_help("Cache for local NSD block device associations.")
+}
+
+fn arg_filesystem() -> Arg {
+    Arg::new("filesystem")
+        .required(true)
+        .action(ArgAction::Set)
+        .help("file system")
+        .long_help("File system name.")
+        .value_name("filesystem")
 }
 
 fn arg_force() -> Arg {
