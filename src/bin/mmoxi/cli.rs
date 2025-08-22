@@ -193,6 +193,11 @@ fn build_show() -> Command {
         .subcommand(cluster_manager)
         .subcommand(filesystem_manager);
 
+    let node = Command::new("node")
+        .about("show node name")
+        .disable_help_flag(true)
+        .disable_version_flag(true);
+
     Command::new("show")
         .about("show commands")
         .disable_help_flag(true)
@@ -200,6 +205,9 @@ fn build_show() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(manager)
+        .subcommand(node)
+}
+
 // ----------------------------------------------------------------------------
 // arguments
 // ----------------------------------------------------------------------------

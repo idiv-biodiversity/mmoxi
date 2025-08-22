@@ -75,6 +75,7 @@ fn dispatch_prom_pool(args: &ArgMatches) -> Result<()> {
 fn dispatch_show(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
         Some(("manager", args)) => dispatch_show_manager(args),
+        Some(("node", _args)) => run_show_node(),
 
         _ => Err(anyhow!("subcommand is required")),
     }
@@ -296,6 +297,15 @@ fn run_show_filesystem_manager(args: &ArgMatches) -> Result<()> {
     };
 
     println!("{}", manager.name());
+
+    Ok(())
+}
+
+fn run_show_node() -> Result<()> {
+    let node = mmoxi::state::local_node_name()
+        .context("determining local node name")?;
+
+    println!("{node}");
 
     Ok(())
 }
