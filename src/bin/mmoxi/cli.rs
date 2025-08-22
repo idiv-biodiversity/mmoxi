@@ -23,6 +23,7 @@ pub fn build() -> Command {
         .disable_version_flag(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
+        .infer_subcommands(true)
         .subcommand(build_cache())
         .subcommand(build_list())
         .subcommand(pool_percent)
