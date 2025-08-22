@@ -1,6 +1,6 @@
 [package]
 name = "mmoxi"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Christian Krause <christian.krause@idiv.org>"]
 description = "tools for IBM Storage Scale file systems"
 license = "GPL-3.0-or-later"
