@@ -53,6 +53,7 @@ fn dispatch_prom(args: &ArgMatches) -> Result<()> {
         Some(("df", args)) => run_prom_df(args),
         Some(("disk", args)) => run_prom_disk(args),
         Some(("fileset", args)) => run_prom_fileset(args),
+        Some(("manager", args)) => run_prom_manager(args),
         Some(("pool", args)) => dispatch_prom_pool(args),
         Some(("quota", args)) => run_prom_quota(args),
 
@@ -235,6 +236,15 @@ fn run_prom_fileset(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+fn run_prom_manager(args: &ArgMatches) -> Result<()> {
+    let mut output = output_to_bufwriter(args)?;
+
+    let data = mmoxi::mgr::get()?;
+    data.to_prom(&mut output)?;
+
+    Ok(())
+}
+
 fn run_prom_pool_block(args: &ArgMatches) -> Result<()> {
     let mut output = output_to_bufwriter(args)?;
 
@@ -291,12 +301,12 @@ fn run_show_filesystem_manager(args: &ArgMatches) -> Result<()> {
     let Some(manager) = managers
         .fs()
         .iter()
-        .find(|fs_man| fs_man.fs() == filesystem_name)
+        .find(|manager| manager.fs_name() == filesystem_name)
     else {
         return Err(anyhow!("filesystem not found in manager list"));
     };
 
-    println!("{}", manager.name());
+    println!("{}", manager.manager_name());
 
     Ok(())
 }

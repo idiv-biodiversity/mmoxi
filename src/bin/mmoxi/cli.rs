@@ -108,6 +108,12 @@ pub fn build_prometheus() -> Command {
         .arg(arg_output())
         .after_long_help("Run on cluster manager only.");
 
+    let prom_manager = Command::new("manager")
+        .about("Gather manager state metrics.")
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .arg(arg_output());
+
     let prom_pool_user_distribution = Command::new("user-distribution")
         .about("Gather usage per user for a pool.")
         .alias("udistri")
@@ -166,6 +172,7 @@ pub fn build_prometheus() -> Command {
         .subcommand(prom_df)
         .subcommand(prom_disk)
         .subcommand(prom_fileset)
+        .subcommand(prom_manager)
         .subcommand(prom_pool)
         .subcommand(prom_quota)
 }

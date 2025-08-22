@@ -1,6 +1,6 @@
 //! `mmlsmgr` parsing.
 
-use std::io::BufRead;
+use std::io::{BufRead, Write};
 use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
@@ -95,28 +95,28 @@ impl ClusterManager {
 /// Filesystem manager.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct FSManager {
-    fs: String,
-    name: String,
-    ip: String,
+    fs_name: String,
+    manager_name: String,
+    manager_ip: String,
 }
 
 impl FSManager {
     /// Returns the filesystem name.
     #[must_use]
-    pub fn fs(&self) -> &str {
-        &self.fs
+    pub fn fs_name(&self) -> &str {
+        &self.fs_name
     }
 
     /// Returns the name of the manager.
     #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
+    pub fn manager_name(&self) -> &str {
+        &self.manager_name
     }
 
     /// Returns the IP address of the manager.
     #[must_use]
-    pub fn ip(&self) -> &str {
-        &self.ip
+    pub fn manager_ip(&self) -> &str {
+        &self.manager_ip
     }
 }
 
@@ -148,7 +148,11 @@ impl FSManager {
             index.ip.ok_or_else(|| anyhow!("no managerIP index"))?;
         let ip = tokens[ip_index].into();
 
-        Ok(Self { fs, name, ip })
+        Ok(Self {
+            fs_name: fs,
+            manager_name: name,
+            manager_ip: ip,
+        })
     }
 }
 
@@ -188,6 +192,49 @@ impl FSIndex {
 }
 
 // ----------------------------------------------------------------------------
+// prometheus
+// ----------------------------------------------------------------------------
+
+impl crate::prom::ToText for Manager {
+    fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        let self_node = crate::state::local_node_name()
+            .context("getting self node name failed")?;
+
+        let cluster_manager_state = i32::from(self_node == self.cluster.name);
+
+        writeln!(
+            output,
+            "# HELP gpfs_cluster_manager_state GPFS cluster manager state."
+        )?;
+
+        writeln!(output, "# TYPE gpfs_cluster_manager_state gauge")?;
+
+        writeln!(
+            output,
+            "gpfs_cluster_manager_state {cluster_manager_state}",
+        )?;
+
+        for fs_managers in &self.fs {
+            let fs_state = i32::from(self_node == fs_managers.manager_name);
+
+            writeln!(
+                output,
+                "# HELP gpfs_filesystem_manager_state GPFS filesystem manager state."
+            )?;
+            writeln!(output, "# TYPE gpfs_filesystem_manager_state gauge")?;
+
+            writeln!(
+                output,
+                "gpfs_filesystem_manager_state{{fs=\"{}\"}} {}",
+                fs_managers.fs_name, fs_state,
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+// ----------------------------------------------------------------------------
 // tests
 // ----------------------------------------------------------------------------
 
@@ -209,14 +256,14 @@ mod tests {
                 },
                 fs: vec![
                     FSManager {
-                        fs: "gpfs1".into(),
-                        name: "filer2".into(),
-                        ip: "10.10.21.2".into(),
+                        fs_name: "gpfs1".into(),
+                        manager_name: "filer2".into(),
+                        manager_ip: "10.10.21.2".into(),
                     },
                     FSManager {
-                        fs: "gpfs2".into(),
-                        name: "filer3".into(),
-                        ip: "10.10.21.3".into(),
+                        fs_name: "gpfs2".into(),
+                        manager_name: "filer3".into(),
+                        manager_ip: "10.10.21.3".into(),
                     },
                 ]
             }
