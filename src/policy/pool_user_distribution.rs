@@ -23,7 +23,7 @@ use tempfile::{tempdir, tempdir_in};
 /// - running `mmapplypolicy`
 /// - parsing `mmapplypolicy` output
 pub fn run(
-    device_or_dir: impl AsRef<OsStr>,
+    device_or_dir: impl Into<String>,
     pool: impl Into<String>,
     fileset: Option<impl AsRef<str>>,
     nodes: Option<impl AsRef<OsStr>>,
@@ -31,6 +31,7 @@ pub fn run(
     global_work_dir: Option<impl AsRef<Path>>,
     scope: Option<impl AsRef<str>>,
 ) -> Result<Data> {
+    let device_or_dir = device_or_dir.into();
     let pool = pool.into();
 
     let tmp = if let Some(ref local_work_dir) = local_work_dir {
@@ -48,7 +49,7 @@ pub fn run(
 
     let mut command = Command::new("mmapplypolicy");
     command
-        .arg(device_or_dir.as_ref())
+        .arg(&device_or_dir)
         .args([OsStr::new("-P"), policy.as_os_str()])
         .args([OsStr::new("-f"), prefix.as_os_str()])
         .args(["--choice-algorithm", "fast"])
@@ -100,6 +101,7 @@ pub fn run(
     }
 
     let data = Data {
+        device_or_dir,
         pool,
         raw: named_user_sizes,
     };
@@ -109,12 +111,14 @@ pub fn run(
 
 /// The data structure returned by this module.
 pub struct Data {
+    device_or_dir: String,
     pool: String,
     raw: HashMap<String, Summary>,
 }
 
 impl crate::prom::ToText for Data {
     fn to_prom(&self, output: &mut impl Write) -> Result<()> {
+        let device_or_dir = &self.device_or_dir;
         let pool = &self.pool;
 
         writeln!(
@@ -127,8 +131,11 @@ impl crate::prom::ToText for Data {
         for (user, data) in &self.raw {
             writeln!(
                 output,
-                "gpfs_pool_user_distribution_files{{pool=\"{}\",user=\"{}\"}} {}",
-                pool, user, data.files,
+                "gpfs_pool_user_distribution_files{{device_or_dir=\"{}\",pool=\"{}\",user=\"{}\"}} {}",
+                device_or_dir,
+                pool,
+                user,
+                data.files,
             )?;
         }
 
@@ -145,8 +152,11 @@ impl crate::prom::ToText for Data {
         for (user, data) in &self.raw {
             writeln!(
                 output,
-                "gpfs_pool_user_distribution_file_size{{pool=\"{}\",user=\"{}\"}} {}",
-                pool, user, data.file_size,
+                "gpfs_pool_user_distribution_file_size{{device_or_dir=\"{}\",pool=\"{}\",user=\"{}\"}} {}",
+                device_or_dir,
+                pool,
+                user,
+                data.file_size,
             )?;
         }
 
@@ -163,8 +173,11 @@ impl crate::prom::ToText for Data {
         for (user, data) in &self.raw {
             writeln!(
                 output,
-                "gpfs_pool_user_distribution_allocated{{pool=\"{}\",user=\"{}\"}} {}",
-                pool, user, data.kb_allocated,
+                "gpfs_pool_user_distribution_allocated{{device_or_dir=\"{}\",pool=\"{}\",user=\"{}\"}} {}",
+                device_or_dir,
+                pool,
+                user,
+                data.kb_allocated,
             )?;
         }
 
