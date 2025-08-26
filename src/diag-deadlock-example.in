@@ -1,0 +1,6 @@
+mmdiag:deadlockThread:HEADER:version:reserved:reserved:threadId:threadName:waitStartTime:waitTime:condVarAddr:condVarName:condVarReason:mutexAddr:mutexName:auxReason:delayTime:delayReason:
+mmdiag:deadlockThread:0:1:::780840:VerbsDeleteConnThread:2025-08-25_06%3A11%3A57+0200:103799.3067: for verbsPutCT calling ibv_destroy_qp:::
+mmdiag:deadlockNodes:HEADER:version:reserved:reserved:nodeList:
+mmdiag:deadlockNodes:0:1:::filer3-ib0:
+mmdiag:deadlockDetectionTimes:HEADER:version:reserved:reserved:mediumWaiterTime:shortWaiterTime:overloadCluster:overloadIndex:overloaded:
+mmdiag:deadlockDetectionTimes:0:1:::3900:480:example.org:0.02473:1:

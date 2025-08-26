@@ -1,0 +1,3 @@
+mmdiag:deadlockThread:HEADER:version:reserved:reserved:threadId:threadName:waitStartTime:waitTime:condVarAddr:condVarName:condVarReason:mutexAddr:mutexName:auxReason:delayTime:delayReason:
+mmdiag:deadlockDetectionTimes:HEADER:version:reserved:reserved:mediumWaiterTime:shortWaiterTime:overloadCluster:overloadIndex:overloaded:
+mmdiag:deadlockDetectionTimes:0:1:::1033:655:example.org:0.00123:0:

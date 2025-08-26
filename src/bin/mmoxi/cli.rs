@@ -87,6 +87,12 @@ fn build_list() -> Command {
 }
 
 pub fn build_prometheus() -> Command {
+    let prom_deadlocks = Command::new("deadlocks")
+        .about("Gather deadlock metrics.")
+        .disable_help_flag(true)
+        .disable_version_flag(true)
+        .arg(arg_output());
+
     let prom_df = Command::new("df")
         .about("Gather metrics from mmdf.")
         .disable_help_flag(true)
@@ -169,6 +175,7 @@ pub fn build_prometheus() -> Command {
         .disable_version_flag(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
+        .subcommand(prom_deadlocks)
         .subcommand(prom_df)
         .subcommand(prom_disk)
         .subcommand(prom_fileset)

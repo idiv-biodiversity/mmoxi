@@ -50,6 +50,7 @@ fn dispatch_list(args: &ArgMatches) -> Result<()> {
 
 fn dispatch_prom(args: &ArgMatches) -> Result<()> {
     match args.subcommand() {
+        Some(("deadlocks", args)) => run_prom_deadlocks(args),
         Some(("df", args)) => run_prom_df(args),
         Some(("disk", args)) => run_prom_disk(args),
         Some(("fileset", args)) => run_prom_fileset(args),
@@ -195,6 +196,13 @@ fn run_prom_pool_user_distribution(args: &ArgMatches) -> Result<()> {
 
     data.to_prom(&mut output)?;
 
+    Ok(())
+}
+
+fn run_prom_deadlocks(args: &ArgMatches) -> Result<()> {
+    let mut output = output_to_bufwriter(args)?;
+    let data = mmoxi::diag::deadlock()?;
+    data.to_prom(&mut output)?;
     Ok(())
 }
 
