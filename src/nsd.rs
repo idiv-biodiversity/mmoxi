@@ -8,7 +8,7 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
 use std::process::Command;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 /// Returns the default local device cache path.
 pub const DEFAULT_LOCAL_DEVICE_CACHE: &str = "/run/mmlocal-nsd-device-cache";

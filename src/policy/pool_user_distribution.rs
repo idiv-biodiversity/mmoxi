@@ -8,9 +8,9 @@ use std::ops::AddAssign;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use anyhow::{anyhow, Context, Result};
-use bstr::io::BufReadExt;
+use anyhow::{Context, Result, anyhow};
 use bstr::ByteSlice;
+use bstr::io::BufReadExt;
 use tempfile::{tempdir, tempdir_in};
 
 /// Runs `mmapplypolicy` on a file system pool to find out how much file sizes
@@ -132,10 +132,7 @@ impl crate::prom::ToText for Data {
             writeln!(
                 output,
                 "gpfs_pool_user_distribution_files{{device_or_dir=\"{}\",pool=\"{}\",user=\"{}\"}} {}",
-                device_or_dir,
-                pool,
-                user,
-                data.files,
+                device_or_dir, pool, user, data.files,
             )?;
         }
 
@@ -153,10 +150,7 @@ impl crate::prom::ToText for Data {
             writeln!(
                 output,
                 "gpfs_pool_user_distribution_file_size{{device_or_dir=\"{}\",pool=\"{}\",user=\"{}\"}} {}",
-                device_or_dir,
-                pool,
-                user,
-                data.file_size,
+                device_or_dir, pool, user, data.file_size,
             )?;
         }
 
@@ -174,10 +168,7 @@ impl crate::prom::ToText for Data {
             writeln!(
                 output,
                 "gpfs_pool_user_distribution_allocated{{device_or_dir=\"{}\",pool=\"{}\",user=\"{}\"}} {}",
-                device_or_dir,
-                pool,
-                user,
-                data.kb_allocated,
+                device_or_dir, pool, user, data.kb_allocated,
             )?;
         }
 

@@ -7,7 +7,7 @@ use std::io::Write;
 use std::process::Command;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 // ----------------------------------------------------------------------------
 // CLI interface
@@ -236,22 +236,18 @@ impl crate::prom::ToText for Vec<Filesystem> {
             for pool in &fs.pools {
                 if let Some(size) = &pool.data {
                     writeln!(
-                    output,
-                    "gpfs_fs_pool_total_kbytes{{fs=\"{}\",pool=\"{}\",type=\"data\"}} {}",
-                    fs.name,
-                    pool.name,
-                    size.total_kb
-                )?;
+                        output,
+                        "gpfs_fs_pool_total_kbytes{{fs=\"{}\",pool=\"{}\",type=\"data\"}} {}",
+                        fs.name, pool.name, size.total_kb
+                    )?;
                 }
 
                 if let Some(size) = &pool.meta {
                     writeln!(
-                    output,
-                    "gpfs_fs_pool_total_kbytes{{fs=\"{}\",pool=\"{}\",type=\"meta\"}} {}",
-                    fs.name,
-                    pool.name,
-                    size.total_kb
-                )?;
+                        output,
+                        "gpfs_fs_pool_total_kbytes{{fs=\"{}\",pool=\"{}\",type=\"meta\"}} {}",
+                        fs.name, pool.name, size.total_kb
+                    )?;
                 }
             }
         }
@@ -266,22 +262,18 @@ impl crate::prom::ToText for Vec<Filesystem> {
             for pool in &fs.pools {
                 if let Some(size) = &pool.data {
                     writeln!(
-                    output,
-                    "gpfs_fs_pool_free_kbytes{{fs=\"{}\",pool=\"{}\",type=\"data\"}} {}",
-                    fs.name,
-                    pool.name,
-                    size.free_kb
-                )?;
+                        output,
+                        "gpfs_fs_pool_free_kbytes{{fs=\"{}\",pool=\"{}\",type=\"data\"}} {}",
+                        fs.name, pool.name, size.free_kb
+                    )?;
                 }
 
                 if let Some(size) = &pool.meta {
                     writeln!(
-                    output,
-                    "gpfs_fs_pool_free_kbytes{{fs=\"{}\",pool=\"{}\",type=\"meta\"}} {}",
-                    fs.name,
-                    pool.name,
-                    size.free_kb
-                )?;
+                        output,
+                        "gpfs_fs_pool_free_kbytes{{fs=\"{}\",pool=\"{}\",type=\"meta\"}} {}",
+                        fs.name, pool.name, size.free_kb
+                    )?;
                 }
             }
         }

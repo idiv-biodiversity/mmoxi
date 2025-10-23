@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::PathBuf;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use clap::ArgMatches;
 
 use mmoxi::prom::ToText;

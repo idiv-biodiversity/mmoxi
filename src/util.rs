@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 
 /// Boolean type as used by various `mm* -Y` output.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]

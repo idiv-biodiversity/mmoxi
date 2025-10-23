@@ -5,7 +5,7 @@ use std::hash::BuildHasher;
 use std::io::{BufRead, Write};
 use std::process::Command;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use crate::prom::ToText;
 use crate::util::MMBool;
@@ -239,8 +239,7 @@ impl<S: BuildHasher> ToText for HashMap<String, Vec<Pool>, S> {
                 writeln!(
                     output,
                     "gpfs_df_pool_free_blocks_percent{{name=\"{}\",fs=\"{fs}\"}} {}",
-                    pool.name,
-                    pool.free_blocks_percent,
+                    pool.name, pool.free_blocks_percent,
                 )?;
             }
         }
@@ -257,8 +256,7 @@ impl<S: BuildHasher> ToText for HashMap<String, Vec<Pool>, S> {
                 writeln!(
                     output,
                     "gpfs_df_pool_free_fragments{{name=\"{}\",fs=\"{fs}\"}} {}",
-                    pool.name,
-                    pool.free_fragments,
+                    pool.name, pool.free_fragments,
                 )?;
             }
         }
@@ -275,8 +273,7 @@ impl<S: BuildHasher> ToText for HashMap<String, Vec<Pool>, S> {
                 writeln!(
                     output,
                     "gpfs_df_pool_free_fragments_percent{{name=\"{}\",fs=\"{fs}\"}} {}",
-                    pool.name,
-                    pool.free_fragments_percent,
+                    pool.name, pool.free_fragments_percent,
                 )?;
             }
         }

@@ -2,8 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 
 use clap::builder::PossibleValuesParser;
-use clap::{crate_name, crate_version};
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use clap::{crate_name, crate_version};
 
 pub fn args() -> ArgMatches {
     build().get_matches()

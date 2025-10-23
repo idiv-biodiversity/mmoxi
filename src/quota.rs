@@ -21,7 +21,7 @@ use std::fmt;
 use std::io::{BufRead, Write};
 use std::str::FromStr;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use crate::prom::ToText;
 

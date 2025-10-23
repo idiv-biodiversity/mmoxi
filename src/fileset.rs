@@ -3,7 +3,7 @@
 use std::io::{BufRead, Write};
 use std::process::Command;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use crate::prom::ToText;
 use crate::util::MMBool;

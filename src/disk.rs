@@ -6,7 +6,7 @@ use std::io::{BufRead, Write};
 use std::process::Command;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use crate::util::MMBool;
 
@@ -276,14 +276,14 @@ impl<S: ::std::hash::BuildHasher> crate::prom::ToText
                 };
 
                 writeln!(
-                output,
-                "gpfs_disk_availability{{name=\"{}\",fs=\"{}\",pool=\"{}\",availability=\"{}\"}} {}",
-                disk.nsd_name,
-                fs,
-                disk.storage_pool,
-                disk.availability,
-                status,
-            )?;
+                    output,
+                    "gpfs_disk_availability{{name=\"{}\",fs=\"{}\",pool=\"{}\",availability=\"{}\"}} {}",
+                    disk.nsd_name,
+                    fs,
+                    disk.storage_pool,
+                    disk.availability,
+                    status,
+                )?;
             }
         }
 

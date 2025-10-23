@@ -3,7 +3,7 @@
 use std::io::BufRead;
 use std::process::Command;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 /// Returns the local node name.
 ///
