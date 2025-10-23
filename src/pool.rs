@@ -40,7 +40,7 @@ pub fn run(fs_name: &str) -> Result<Filesystem> {
             pools,
         })
     } else {
-        Err(anyhow!("error running: {:?}", cmd))
+        Err(anyhow!("error running: {cmd:?}"))
     }
 }
 
@@ -203,7 +203,7 @@ impl FromStr for Pool {
         };
 
         if data.is_none() && meta.is_none() {
-            Err(anyhow!("pool {} contains neither data nor metadata", name))
+            Err(anyhow!("pool {name} contains neither data nor metadata"))
         } else {
             Ok(Self { name, data, meta })
         }

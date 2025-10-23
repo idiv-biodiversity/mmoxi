@@ -204,7 +204,7 @@ impl FromStr for Type {
             "FILESET" => Ok(Self::Fileset),
             "GRP" => Ok(Self::Group),
             "USR" => Ok(Self::User),
-            unknown => Err(anyhow!("unknown quota type: {}", unknown)),
+            unknown => Err(anyhow!("unknown quota type: {unknown}")),
         }
     }
 }
