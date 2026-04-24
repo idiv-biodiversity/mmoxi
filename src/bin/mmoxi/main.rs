@@ -97,7 +97,7 @@ fn dispatch_show_manager(args: &ArgMatches) -> Result<()> {
 // ----------------------------------------------------------------------------
 
 fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
-    let force = args.contains_id("force");
+    let force = args.get_flag("force");
 
     let device_cache = args
         .get_one::<PathBuf>("device-cache")
@@ -117,7 +117,7 @@ fn run_cache_nmon(args: &ArgMatches) -> Result<()> {
 }
 
 fn run_cache_nsds(args: &ArgMatches) -> Result<()> {
-    let force = args.contains_id("force");
+    let force = args.get_flag("force");
 
     let output = args
         .get_one::<PathBuf>("output")
@@ -260,7 +260,7 @@ fn run_prom_pool_block(args: &ArgMatches) -> Result<()> {
         .get_one::<PathBuf>("device-cache")
         .expect("device-cache has a default value");
 
-    let force = args.contains_id("force");
+    let force = args.get_flag("force");
 
     let metrics = mmoxi::prom::pool_block_device_metrics(device_cache, force)?;
     metrics.to_prom(&mut output)?;
