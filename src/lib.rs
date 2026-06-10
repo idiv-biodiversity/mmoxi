@@ -9,6 +9,7 @@ pub mod diag;
 pub mod disk;
 pub mod fileset;
 pub mod fs;
+pub mod health;
 pub mod mgr;
 pub mod nmon;
 pub mod nsd;

@@ -1,0 +1,4 @@
+# HELP gpfs_health_node GPFS mmhealth node show.
+# TYPE gpfs_health_node gauge
+gpfs_health_node{status="HEALTHY"} 5
+gpfs_health_node{status="TIPS"} 4
