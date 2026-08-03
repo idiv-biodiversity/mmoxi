@@ -29,7 +29,6 @@ concurrency:
 
 jobs:
   call-workflow:
-    name: rust
     uses: wookietreiber/workflows/.github/workflows/rust.yml@main
 
 ...
