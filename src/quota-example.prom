@@ -14,19 +14,19 @@ gpfs_quota_block_limit_kbytes{fs="gpfs1",type="USR",id="62347",name="62347",file
 # TYPE gpfs_quota_block_in_doubt_kbytes gauge
 gpfs_quota_block_in_doubt_kbytes{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 406372448
 gpfs_quota_block_in_doubt_kbytes{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0
-# HELP gpfs_quota_files_usage_kbytes GPFS quota block usage in kilobytes.
-# TYPE gpfs_quota_files_usage_kbytes gauge
-gpfs_quota_files_usage_kbytes{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 553624
-gpfs_quota_files_usage_kbytes{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 25738
-# HELP gpfs_quota_files_quota_kbytes GPFS quota block quota in kilobytes.
-# TYPE gpfs_quota_files_quota_kbytes gauge
-gpfs_quota_files_quota_kbytes{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 5000000
-gpfs_quota_files_quota_kbytes{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0
-# HELP gpfs_quota_files_limit_kbytes GPFS quota block limit in kilobytes.
-# TYPE gpfs_quota_files_limit_kbytes gauge
-gpfs_quota_files_limit_kbytes{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 20000000
-gpfs_quota_files_limit_kbytes{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0
-# HELP gpfs_quota_files_in_doubt_kbytes GPFS quota block in doubt in kilobytes.
-# TYPE gpfs_quota_files_in_doubt_kbytes gauge
-gpfs_quota_files_in_doubt_kbytes{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 0
-gpfs_quota_files_in_doubt_kbytes{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0
+# HELP gpfs_quota_files_usage_nfiles GPFS quota block usage in number of files.
+# TYPE gpfs_quota_files_usage_nfiles gauge
+gpfs_quota_files_usage_nfiles{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 553624
+gpfs_quota_files_usage_nfiles{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 25738
+# HELP gpfs_quota_files_quota_nfiles GPFS quota block quota in number of files.
+# TYPE gpfs_quota_files_quota_nfiles gauge
+gpfs_quota_files_quota_nfiles{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 5000000
+gpfs_quota_files_quota_nfiles{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0
+# HELP gpfs_quota_files_limit_nfiles GPFS quota block limit in number of files.
+# TYPE gpfs_quota_files_limit_nfiles gauge
+gpfs_quota_files_limit_nfiles{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 20000000
+gpfs_quota_files_limit_nfiles{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0
+# HELP gpfs_quota_files_in_doubt_nfiles GPFS quota block in doubt in number of files.
+# TYPE gpfs_quota_files_in_doubt_nfiles gauge
+gpfs_quota_files_in_doubt_nfiles{fs="gpfs1",type="FILESET",id="1",name="name1",fileset=""} 0
+gpfs_quota_files_in_doubt_nfiles{fs="gpfs1",type="USR",id="62347",name="62347",fileset="fileset1"} 0

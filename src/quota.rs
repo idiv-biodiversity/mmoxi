@@ -475,14 +475,14 @@ fn prom_block_in_doubt<O: Write>(
 fn prom_files_usage<O: Write>(data: &[Entry], output: &mut O) -> Result<()> {
     writeln!(
         output,
-        "# HELP gpfs_quota_files_usage_kbytes GPFS quota block usage in kilobytes."
+        "# HELP gpfs_quota_files_usage_nfiles GPFS quota block usage in number of files."
     )?;
-    writeln!(output, "# TYPE gpfs_quota_files_usage_kbytes gauge")?;
+    writeln!(output, "# TYPE gpfs_quota_files_usage_nfiles gauge")?;
 
     for data in data {
         writeln!(
             output,
-            "gpfs_quota_files_usage_kbytes{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
+            "gpfs_quota_files_usage_nfiles{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
             data.fs_name,
             data.quota_type,
             data.id,
@@ -498,14 +498,14 @@ fn prom_files_usage<O: Write>(data: &[Entry], output: &mut O) -> Result<()> {
 fn prom_files_quota<O: Write>(data: &[Entry], output: &mut O) -> Result<()> {
     writeln!(
         output,
-        "# HELP gpfs_quota_files_quota_kbytes GPFS quota block quota in kilobytes."
+        "# HELP gpfs_quota_files_quota_nfiles GPFS quota block quota in number of files."
     )?;
-    writeln!(output, "# TYPE gpfs_quota_files_quota_kbytes gauge")?;
+    writeln!(output, "# TYPE gpfs_quota_files_quota_nfiles gauge")?;
 
     for data in data {
         writeln!(
             output,
-            "gpfs_quota_files_quota_kbytes{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
+            "gpfs_quota_files_quota_nfiles{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
             data.fs_name,
             data.quota_type,
             data.id,
@@ -521,14 +521,14 @@ fn prom_files_quota<O: Write>(data: &[Entry], output: &mut O) -> Result<()> {
 fn prom_files_limit<O: Write>(data: &[Entry], output: &mut O) -> Result<()> {
     writeln!(
         output,
-        "# HELP gpfs_quota_files_limit_kbytes GPFS quota block limit in kilobytes."
+        "# HELP gpfs_quota_files_limit_nfiles GPFS quota block limit in number of files."
     )?;
-    writeln!(output, "# TYPE gpfs_quota_files_limit_kbytes gauge")?;
+    writeln!(output, "# TYPE gpfs_quota_files_limit_nfiles gauge")?;
 
     for data in data {
         writeln!(
             output,
-            "gpfs_quota_files_limit_kbytes{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
+            "gpfs_quota_files_limit_nfiles{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
             data.fs_name,
             data.quota_type,
             data.id,
@@ -547,14 +547,14 @@ fn prom_files_in_doubt<O: Write>(
 ) -> Result<()> {
     writeln!(
         output,
-        "# HELP gpfs_quota_files_in_doubt_kbytes GPFS quota block in doubt in kilobytes."
+        "# HELP gpfs_quota_files_in_doubt_nfiles GPFS quota block in doubt in number of files."
     )?;
-    writeln!(output, "# TYPE gpfs_quota_files_in_doubt_kbytes gauge")?;
+    writeln!(output, "# TYPE gpfs_quota_files_in_doubt_nfiles gauge")?;
 
     for data in data {
         writeln!(
             output,
-            "gpfs_quota_files_in_doubt_kbytes{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
+            "gpfs_quota_files_in_doubt_nfiles{{fs=\"{}\",type=\"{}\",id=\"{}\",name=\"{}\",fileset=\"{}\"}} {}",
             data.fs_name,
             data.quota_type,
             data.id,
