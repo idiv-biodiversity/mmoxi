@@ -200,7 +200,17 @@ impl crate::prom::ToText for Manager {
         let self_node = crate::state::local_node_name()
             .context("getting self node name failed")?;
 
-        let cluster_manager_state = i32::from(self_node == self.cluster.name);
+        self.to_prom_with_node(&self_node, output)
+    }
+}
+
+impl Manager {
+    fn to_prom_with_node(
+        &self,
+        node: &str,
+        output: &mut impl Write,
+    ) -> Result<()> {
+        let cluster_manager_state = i32::from(node == self.cluster.name);
 
         writeln!(
             output,
@@ -214,14 +224,14 @@ impl crate::prom::ToText for Manager {
             "gpfs_cluster_manager_state {cluster_manager_state}",
         )?;
 
-        for fs_managers in &self.fs {
-            let fs_state = i32::from(self_node == fs_managers.manager_name);
+        writeln!(
+            output,
+            "# HELP gpfs_filesystem_manager_state GPFS filesystem manager state."
+        )?;
+        writeln!(output, "# TYPE gpfs_filesystem_manager_state gauge")?;
 
-            writeln!(
-                output,
-                "# HELP gpfs_filesystem_manager_state GPFS filesystem manager state."
-            )?;
-            writeln!(output, "# TYPE gpfs_filesystem_manager_state gauge")?;
+        for fs_managers in &self.fs {
+            let fs_state = i32::from(node == fs_managers.manager_name);
 
             writeln!(
                 output,
@@ -268,5 +278,33 @@ mod tests {
                 ]
             }
         );
+    }
+
+    #[test]
+    fn prom() {
+        let manager = Manager {
+            cluster: ClusterManager {
+                name: "filer1".into(),
+            },
+            fs: vec![
+                FSManager {
+                    fs_name: "gpfs1".into(),
+                    manager_name: "filer2".into(),
+                    manager_ip: "10.10.21.2".into(),
+                },
+                FSManager {
+                    fs_name: "gpfs2".into(),
+                    manager_name: "filer3".into(),
+                    manager_ip: "10.10.21.3".into(),
+                },
+            ],
+        };
+
+        let mut result = vec![];
+        manager.to_prom_with_node("filer1", &mut result).unwrap();
+        let metrics = std::str::from_utf8(result.as_slice()).unwrap();
+
+        let expected = include_str!("mgr-example.prom");
+        assert_eq!(expected, metrics);
     }
 }
