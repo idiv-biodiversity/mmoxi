@@ -1,0 +1,7 @@
+# HELP gpfs_cluster_manager_state GPFS cluster manager state.
+# TYPE gpfs_cluster_manager_state gauge
+gpfs_cluster_manager_state 1
+# HELP gpfs_filesystem_manager_state GPFS filesystem manager state.
+# TYPE gpfs_filesystem_manager_state gauge
+gpfs_filesystem_manager_state{fs="gpfs1"} 0
+gpfs_filesystem_manager_state{fs="gpfs2"} 0
