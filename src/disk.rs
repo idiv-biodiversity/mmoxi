@@ -1,6 +1,6 @@
 //! `mmlsdisk` parsing.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::io::{BufRead, Write};
 use std::process::Command;
@@ -258,17 +258,15 @@ fn header_to_index(tokens: &[&str], index: &mut Index) {
 // prometheus
 // ----------------------------------------------------------------------------
 
-impl<S: ::std::hash::BuildHasher> crate::prom::ToText
-    for HashMap<String, Disks, S>
-{
+impl crate::prom::ToText for BTreeMap<String, Disks> {
     fn to_prom(&self, output: &mut impl Write) -> Result<()> {
-        for (fs, disks) in self {
-            writeln!(
-                output,
-                "# HELP gpfs_disk_availability GPFS disk availability."
-            )?;
-            writeln!(output, "# TYPE gpfs_disk_availability gauge")?;
+        writeln!(
+            output,
+            "# HELP gpfs_disk_availability GPFS disk availability."
+        )?;
+        writeln!(output, "# TYPE gpfs_disk_availability gauge")?;
 
+        for (fs, disks) in self {
             for disk in &disks.0 {
                 let status = match disk.availability {
                     Availability::Up => 0,
@@ -356,7 +354,7 @@ mod tests {
 
     #[test]
     fn prometheus() {
-        let disks = vec![
+        let disks_gpfs1 = vec![
             Disk {
                 nsd_name: "disk1".into(),
                 is_metadata: true,
@@ -387,8 +385,40 @@ mod tests {
             },
         ];
 
-        let mut all_disks = HashMap::new();
-        all_disks.insert(String::from("gpfs1"), Disks(disks));
+        let disks_gpfs2 = vec![
+            Disk {
+                nsd_name: "disk5".into(),
+                is_metadata: true,
+                is_objectdata: false,
+                availability: Availability::Up,
+                storage_pool: "system".into(),
+            },
+            Disk {
+                nsd_name: "disk6".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Down,
+                storage_pool: "nvme".into(),
+            },
+            Disk {
+                nsd_name: "disk7".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Recovering,
+                storage_pool: "nlsas".into(),
+            },
+            Disk {
+                nsd_name: "disk8".into(),
+                is_metadata: false,
+                is_objectdata: true,
+                availability: Availability::Unrecovered,
+                storage_pool: "nlsas".into(),
+            },
+        ];
+
+        let mut all_disks = BTreeMap::new();
+        all_disks.insert(String::from("gpfs1"), Disks(disks_gpfs1));
+        all_disks.insert(String::from("gpfs2"), Disks(disks_gpfs2));
 
         let mut output = vec![];
         all_disks.to_prom(&mut output).unwrap();
@@ -396,6 +426,6 @@ mod tests {
         let metrics = std::str::from_utf8(output.as_slice()).unwrap();
 
         let expected = include_str!("disk-example.prom");
-        assert_eq!(metrics, expected);
+        assert_eq!(expected, metrics);
     }
 }

@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::PathBuf;
@@ -216,7 +216,7 @@ fn run_prom_df(args: &ArgMatches) -> Result<()> {
 fn run_prom_disk(args: &ArgMatches) -> Result<()> {
     let mut output = output_to_bufwriter(args)?;
 
-    let mut all_disks = HashMap::new();
+    let mut all_disks = BTreeMap::new();
 
     for fs in mmoxi::fs::names()? {
         let disks = mmoxi::disk::disks(&fs)?;
